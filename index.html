@@ -12,29 +12,36 @@
         .card { height: 100%; display: flex; flex-direction: column; transition: all 0.2s; }
         .card:hover { transform: translateY(-2px); }
         .selected-option { background-color: #2563eb !important; color: white !important; border-color: #1e40af !important; }
-        .admin-only { display: none; }
+        
+        /* Image styles */
+        .q-image { max-width: 100%; height: auto; border-radius: 12px; margin-bottom: 1rem; border: 1px solid #e2e8f0; display: block; }
+        .opt-image { max-height: 120px; width: auto; border-radius: 6px; margin-top: 0.5rem; display: block; border: 1px solid #cbd5e1; background: white; }
+        .option-content { display: flex; flex-direction: column; align-items: flex-start; gap: 0.4rem; }
+        
         .session-btn { transition: all 0.2s; }
         .session-btn.active { background-color: #1e40af; color: white; border-color: #1e40af; transform: scale(1.05); }
-        .q-image { max-width: 100%; height: auto; border-radius: 8px; margin-bottom: 1rem; border: 1px solid #e2e8f0; }
     </style>
 </head>
 <body class="p-4 md:p-8">
     <div id="app" class="max-w-6xl mx-auto">
         <header class="mb-6 text-center">
             <h1 class="text-4xl font-extrabold text-slate-800 mb-2">컴퓨터활용능력 2급 퀴즈</h1>
-            <p class="text-slate-500 mb-6">회차 선택 후 이름을 입력하여 제출하세요</p>
+            <p class="text-slate-500 mb-6">엑셀 파일을 업로드하여 이미지가 포함된 문제를 풀어보세요</p>
             
-            <div id="session-container" class="flex flex-wrap justify-center gap-2 mb-8"></div>
-            
-            <div id="admin-upload-zone" class="admin-only mt-8 p-6 rounded-2xl border-2 border-dashed border-blue-300 bg-white max-w-xl mx-auto mb-10">
-                <p class="text-sm font-bold text-blue-600 mb-3">[관리자 모드]</p>
-                <div class="flex flex-col items-center gap-3">
-                    <label for="file-upload" class="cursor-pointer bg-blue-600 text-white px-6 py-2 rounded-xl hover:bg-blue-700 shadow-md font-bold">문제 엑셀 업로드</label>
-                    <input id="file-upload" type="file" accept=".xlsx, .xls" class="hidden" onchange="handleFileUpload(event)">
-                </div>
+            <!-- File Upload Zone -->
+            <div id="upload-zone" class="p-8 rounded-3xl border-2 border-dashed border-blue-200 bg-white max-w-xl mx-auto mb-10 text-center">
+                <p class="text-slate-600 mb-4 font-medium">문제 엑셀 파일을 선택해주세요</p>
+                <label for="file-upload" class="cursor-pointer bg-blue-600 text-white px-8 py-3 rounded-2xl hover:bg-blue-700 shadow-lg font-bold transition-all inline-block">
+                    파일 선택 (.xlsx)
+                </label>
+                <input id="file-upload" type="file" accept=".xlsx, .xls" class="hidden" onchange="handleFileUpload(event)">
             </div>
+
+            <!-- Session Selection -->
+            <div id="session-container" class="flex flex-wrap justify-center gap-2 mb-8 hidden"></div>
         </header>
 
+        <!-- Quiz Interface -->
         <div id="quiz-container" class="hidden">
             <div id="question-list" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
 
@@ -45,39 +52,32 @@
                 </div>
                 <div class="flex items-center gap-3 w-full md:w-auto justify-end">
                     <button id="next-btn" onclick="changePage(1)" class="w-full md:w-auto px-8 py-3 bg-blue-600 text-white rounded-xl">다음</button>
-                    <div id="submit-area" class="hidden flex items-center gap-2">
-                        <input type="text" id="user-name" oninput="toggleSubmitBtn()" placeholder="성함 입력" class="px-4 py-3 border border-slate-300 rounded-xl outline-none w-32 text-sm">
-                        <button id="submit-btn" disabled onclick="gradeQuiz()" class="px-6 py-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 disabled:bg-slate-300 font-bold">채점 및 제출</button>
-                    </div>
+                    <button id="submit-btn" onclick="gradeQuiz()" class="hidden w-full md:w-auto px-10 py-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 font-bold">채점하기</button>
                 </div>
             </div>
         </div>
 
-        <div id="result-container" class="hidden text-center bg-white p-12 rounded-3xl shadow-2xl mt-8 max-w-2xl mx-auto">
-            <h2 class="text-5xl font-black text-slate-800" id="score-display">0점</h2>
-            <p class="text-xl mt-4 text-slate-500" id="result-message"></p>
+        <!-- Result Section -->
+        <div id="result-container" class="hidden text-center bg-white p-12 rounded-3xl shadow-2xl mt-8 max-w-2xl mx-auto border border-slate-100">
+            <h2 class="text-6xl font-black text-slate-800" id="score-display">0점</h2>
+            <p class="text-xl mt-6 text-slate-500">테스트가 완료되었습니다!</p>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-10">
-                <button onclick="restartQuiz(false)" class="px-6 py-4 bg-slate-800 text-white rounded-2xl font-bold">다시 풀기</button>
-                <button onclick="showReviewPage()" class="px-6 py-4 bg-blue-100 text-blue-700 rounded-2xl font-bold">오답/해설 보기</button>
+                <button onclick="restartQuiz(false)" class="px-6 py-4 bg-slate-800 text-white rounded-2xl font-bold hover:bg-slate-900 transition-all">다시 풀기</button>
+                <button onclick="showReviewPage()" class="px-6 py-4 bg-blue-100 text-blue-700 rounded-2xl font-bold hover:bg-blue-200 transition-all">오답/해설 보기</button>
             </div>
         </div>
 
+        <!-- Review/Explanation Section -->
         <div id="review-container" class="hidden">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold text-slate-800">해설 리스트</h2>
-                <button onclick="restartQuiz(false)" class="px-5 py-2 bg-slate-800 text-white rounded-xl font-bold">닫기</button>
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-3xl font-bold text-slate-800">오답 및 해설</h2>
+                <button onclick="restartQuiz(false)" class="px-6 py-2 bg-slate-800 text-white rounded-xl font-bold">홈으로</button>
             </div>
-            <div id="review-list" class="space-y-6"></div>
-        </div>
-
-        <div id="start-placeholder" class="text-center py-20 bg-white rounded-3xl border border-slate-100">
-            <h3 class="text-xl font-bold text-slate-400 italic">문제를 선택하거나 엑셀을 업로드하세요.</h3>
+            <div id="review-list" class="space-y-8"></div>
         </div>
     </div>
 
     <script>
-        const GOOGLE_SCRIPT_URL = "여기에_복사한_웹_앱_URL을_붙여넣으세요";
-
         let allQuestionsRaw = [];
         let currentQuestions = [];
         let userAnswers = {};
@@ -85,95 +85,50 @@
         let currentSession = 1;
         const questionsPerPage = 4;
         const questionsPerSession = 20;
-        let isGraded = false;
-        let wrongQuestions = [];
-
-        window.onload = function() {
-            const savedData = localStorage.getItem('quizData');
-            if (savedData) {
-                allQuestionsRaw = JSON.parse(savedData);
-                initSessions();
-                loadSession(1);
-            }
-        };
-
-        window.addEventListener('keydown', (e) => {
-            if (e.ctrlKey && e.shiftKey && e.key === 'U') {
-                document.getElementById('admin-upload-zone').style.display = 'block';
-            }
-        });
-
-        function toggleSubmitBtn() {
-            const name = document.getElementById('user-name').value.trim();
-            document.getElementById('submit-btn').disabled = name.length < 2;
-        }
-
-        async function gradeQuiz() {
-            const name = document.getElementById('user-name').value.trim();
-            const submitBtn = document.getElementById('submit-btn');
-            submitBtn.disabled = true;
-            submitBtn.innerText = "제출 중...";
-
-            isGraded = true;
-            let correctCount = 0; 
-            let correctIds = [];
-            let wrongIds = [];
-            wrongQuestions = [];
-
-            currentQuestions.forEach(q => {
-                if (userAnswers[q.id] === q.answer) {
-                    correctCount++;
-                    correctIds.push(q.id);
-                } else {
-                    wrongQuestions.push(q);
-                    wrongIds.push(q.id);
-                }
-            });
-
-            const score = Math.round((correctCount / currentQuestions.length) * 100);
-            
-            const recordData = {
-                name: name,
-                session: currentSession + '회',
-                score: score,
-                correctList: correctIds.join(','),
-                wrongList: wrongIds.join(',')
-            };
-
-            try {
-                await fetch(GOOGLE_SCRIPT_URL, {
-                    method: 'POST',
-                    mode: 'no-cors', 
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(recordData)
-                });
-            } catch (err) { console.error("전송 에러:", err); }
-
-            document.getElementById('quiz-container').classList.add('hidden');
-            document.getElementById('result-container').classList.remove('hidden');
-            document.getElementById('score-display').innerText = `${score}점`;
-            document.getElementById('result-message').innerText = `${name}님, 제출이 완료되었습니다!`;
-        }
 
         function handleFileUpload(event) {
             const file = event.target.files[0];
+            if (!file) return;
+
             const reader = new FileReader();
             reader.onload = function(e) {
-                const workbook = XLSX.read(e.target.result, { type: 'binary' });
-                const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
-                allQuestionsRaw = json.map((row, index) => ({
-                    id: row.번호 || index + 1,
-                    q: row.질문,
-                    detail: row.지문 || "",
-                    image: row.그림 || "", // '그림' 열 추가 대응
-                    options: [String(row.보기1), String(row.보기2), String(row.보기3), String(row.보기4)],
-                    answer: parseInt(row.정답번호) - 1,
-                    explanation: row.해설 || ""
-                }));
-                localStorage.setItem('quizData', JSON.stringify(allQuestionsRaw));
-                initSessions();
-                loadSession(1);
-                document.getElementById('admin-upload-zone').style.display = 'none';
+                try {
+                    const data = e.target.result;
+                    const workbook = XLSX.read(data, { type: 'binary' });
+                    const sheetName = workbook.SheetNames[0];
+                    const json = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+
+                    allQuestionsRaw = json.map((row, index) => ({
+                        id: row.번호 || index + 1,
+                        q: row.질문 || "질문 내용이 없습니다.",
+                        detail: row.지문 || "",
+                        image: row.그림 || "",
+                        options: [
+                            String(row.보기1 || ""), 
+                            String(row.보기2 || ""), 
+                            String(row.보기3 || ""), 
+                            String(row.보기4 || "")
+                        ],
+                        optionImages: [
+                            row.보기1그림 || "",
+                            row.보기2그림 || "",
+                            row.보기3그림 || "",
+                            row.보기4그림 || ""
+                        ],
+                        answer: parseInt(row.정답번호) - 1,
+                        explanation: row.해설 || "제공된 해설이 없습니다."
+                    }));
+
+                    if (allQuestionsRaw.length === 0) throw new Error("No data found");
+
+                    document.getElementById('upload-zone').classList.add('hidden');
+                    document.getElementById('session-container').classList.remove('hidden');
+                    initSessions();
+                    loadSession(1);
+                } catch (err) {
+                    alert("엑셀 파일을 읽는 중 오류가 발생했습니다. 헤더 명칭을 확인하세요.");
+                    console.error(err);
+                }
             };
             reader.readAsBinaryString(file);
         }
@@ -181,11 +136,12 @@
         function initSessions() {
             const container = document.getElementById('session-container');
             container.innerHTML = '';
-            const total = Math.ceil(allQuestionsRaw.length / questionsPerSession);
-            for (let i = 1; i <= total; i++) {
+            const totalSessions = Math.ceil(allQuestionsRaw.length / questionsPerSession);
+            
+            for (let i = 1; i <= totalSessions; i++) {
                 const btn = document.createElement('button');
-                btn.innerText = `${i}회`;
-                btn.className = `session-btn px-5 py-2 border rounded-full font-bold bg-white shadow-sm`;
+                btn.innerText = `${i}회차`;
+                btn.className = `session-btn px-6 py-2 border-2 border-slate-200 rounded-full font-bold bg-white text-slate-600 hover:border-blue-400 transition-all`;
                 btn.id = `session-btn-${i}`;
                 btn.onclick = () => loadSession(i);
                 container.appendChild(btn);
@@ -194,59 +150,94 @@
 
         function loadSession(sessionNum) {
             currentSession = sessionNum;
-            currentQuestions = allQuestionsRaw.slice((sessionNum - 1) * questionsPerSession, sessionNum * questionsPerSession);
+            const start = (sessionNum - 1) * questionsPerSession;
+            currentQuestions = allQuestionsRaw.slice(start, start + questionsPerSession);
+            
             document.querySelectorAll('.session-btn').forEach(b => b.classList.remove('active'));
             const activeBtn = document.getElementById(`session-btn-${sessionNum}`);
             if(activeBtn) activeBtn.classList.add('active');
-            document.getElementById('start-placeholder').classList.add('hidden');
-            document.getElementById('quiz-container').classList.remove('hidden');
+
             restartQuiz(false);
         }
 
         function renderQuestions() {
             const list = document.getElementById('question-list');
             list.innerHTML = '';
-            const pageItems = currentQuestions.slice(currentPage * questionsPerPage, (currentPage + 1) * questionsPerPage);
+            const startIdx = currentPage * questionsPerPage;
+            const pageItems = currentQuestions.slice(startIdx, startIdx + questionsPerPage);
+
             pageItems.forEach(item => {
                 const card = document.createElement('div');
-                card.className = `card bg-white p-8 rounded-3xl shadow-sm border border-slate-100`;
+                card.className = `card bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col`;
                 
-                // 이미지 태그 생성 (데이터가 있을 경우에만)
-                const imgHtml = item.image ? `<img src="${item.image}" class="q-image" alt="문제 이미지" onerror="this.style.display='none'">` : '';
+                // Problem main image
+                const mainImgHtml = item.image ? `<img src="${item.image}" class="q-image" alt="문제 이미지" onerror="this.style.display='none'">` : '';
                 
+                // Option buttons
                 let optionsHtml = item.options.map((opt, oIdx) => {
-                    let style = userAnswers[item.id] === oIdx ? "selected-option" : "border border-slate-200 text-slate-600 hover:border-blue-300";
-                    return `<button onclick="selectOption(${item.id}, ${oIdx})" class="w-full text-left p-4 rounded-2xl mb-2 transition-all ${style}">${oIdx + 1}. ${opt}</button>`;
+                    const isSelected = userAnswers[item.id] === oIdx;
+                    const style = isSelected ? "selected-option" : "border border-slate-200 text-slate-600 hover:border-blue-300";
+                    
+                    const optImgUrl = item.optionImages ? item.optionImages[oIdx] : "";
+                    const optImgHtml = optImgUrl ? `<img src="${optImgUrl}" class="opt-image" alt="보기 이미지" onerror="this.style.display='none'">` : '';
+
+                    return `
+                        <button onclick="selectOption(${item.id}, ${oIdx})" class="w-full text-left p-4 rounded-2xl mb-3 transition-all ${style}">
+                            <div class="option-content">
+                                <span class="font-medium">${oIdx + 1}. ${opt}</span>
+                                ${optImgHtml}
+                            </div>
+                        </button>`;
                 }).join('');
 
                 card.innerHTML = `
-                    <div class="mb-2 text-blue-600 font-bold">Q${item.id}</div>
-                    <h3 class="text-xl font-bold mb-4">${item.q}</h3>
-                    ${imgHtml}
-                    ${item.detail ? `<div class="bg-slate-50 p-4 rounded-xl text-sm mb-4">${item.detail}</div>` : ''}
-                    <div>${optionsHtml}</div>
+                    <div class="mb-2 text-blue-600 font-bold text-sm tracking-tight">QUESTION ${item.id}</div>
+                    <h3 class="text-xl font-bold mb-4 text-slate-800 leading-snug">${item.q}</h3>
+                    ${mainImgHtml}
+                    ${item.detail ? `<div class="bg-slate-50 p-5 rounded-2xl text-sm mb-6 border border-slate-100 text-slate-600 leading-relaxed">${item.detail}</div>` : ''}
+                    <div class="mt-auto">${optionsHtml}</div>
                 `;
                 list.appendChild(card);
             });
             updateNav();
         }
 
-        function selectOption(id, idx) { userAnswers[id] = idx; renderQuestions(); }
-        function changePage(dir) { currentPage += dir; window.scrollTo({top:0}); renderQuestions(); }
-        
-        function updateNav() {
-            const total = Math.ceil(currentQuestions.length / questionsPerPage);
-            document.getElementById('page-info').innerText = `${currentPage + 1} / ${total || 1}`;
-            document.getElementById('prev-btn').disabled = currentPage === 0;
-            const isLast = (currentPage === total - 1) || (total === 0);
-            document.getElementById('next-btn').classList.toggle('hidden', isLast);
-            document.getElementById('submit-area').classList.toggle('hidden', !isLast);
+        function selectOption(id, idx) {
+            userAnswers[id] = idx;
+            renderQuestions();
         }
 
-        function restartQuiz(wrong) {
-            if(!wrong) { userAnswers = {}; document.getElementById('user-name').value = ''; toggleSubmitBtn(); }
-            else { currentQuestions = [...wrongQuestions]; userAnswers = {}; }
-            currentPage = 0; isGraded = false;
+        function changePage(dir) {
+            currentPage += dir;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            renderQuestions();
+        }
+
+        function updateNav() {
+            const totalPages = Math.ceil(currentQuestions.length / questionsPerPage);
+            document.getElementById('page-info').innerText = `${currentPage + 1} / ${totalPages || 1}`;
+            document.getElementById('prev-btn').disabled = currentPage === 0;
+            
+            const isLastPage = (currentPage === totalPages - 1) || (totalPages === 0);
+            document.getElementById('next-btn').classList.toggle('hidden', isLastPage);
+            document.getElementById('submit-btn').classList.toggle('hidden', !isLastPage);
+        }
+
+        function gradeQuiz() {
+            let correctCount = 0;
+            currentQuestions.forEach(q => {
+                if (userAnswers[q.id] === q.answer) correctCount++;
+            });
+
+            const score = Math.round((correctCount / currentQuestions.length) * 100);
+            document.getElementById('quiz-container').classList.add('hidden');
+            document.getElementById('result-container').classList.remove('hidden');
+            document.getElementById('score-display').innerText = `${score}점`;
+        }
+
+        function restartQuiz(isWrongOnly) {
+            userAnswers = {};
+            currentPage = 0;
             document.getElementById('quiz-container').classList.remove('hidden');
             document.getElementById('result-container').classList.add('hidden');
             document.getElementById('review-container').classList.add('hidden');
@@ -258,26 +249,62 @@
             document.getElementById('review-container').classList.remove('hidden');
             const reviewList = document.getElementById('review-list');
             reviewList.innerHTML = '';
+
             currentQuestions.forEach(item => {
                 const isCorrect = userAnswers[item.id] === item.answer;
                 const div = document.createElement('div');
-                div.className = `p-6 bg-white rounded-2xl border ${isCorrect ? 'border-emerald-100' : 'border-rose-100'} shadow-sm`;
+                div.className = `p-8 bg-white rounded-3xl border-2 ${isCorrect ? 'border-emerald-50' : 'border-rose-50'} shadow-sm`;
                 
-                const imgHtml = item.image ? `<img src="${item.image}" class="q-image max-h-48" alt="문제 이미지">` : '';
+                const mainImgHtml = item.image ? `<img src="${item.image}" class="q-image max-h-60" alt="문제 이미지">` : '';
                 
+                let optionsReviewHtml = item.options.map((opt, oIdx) => {
+                    const isCorrectOpt = oIdx === item.answer;
+                    const isUserOpt = oIdx === userAnswers[item.id];
+                    const optImgUrl = item.optionImages ? item.optionImages[oIdx] : "";
+                    const optImgHtml = optImgUrl ? `<img src="${optImgUrl}" class="opt-image max-h-24" alt="보기 이미지">` : '';
+                    
+                    let bgClass = "bg-slate-50";
+                    let textClass = "text-slate-600";
+                    let label = "";
+
+                    if (isCorrectOpt) {
+                        bgClass = "bg-emerald-50 border border-emerald-100";
+                        textClass = "text-emerald-700 font-bold";
+                        label = " (정답)";
+                    } else if (isUserOpt) {
+                        bgClass = "bg-rose-50 border border-rose-100";
+                        textClass = "text-rose-700 font-bold";
+                        label = " (나의 선택)";
+                    }
+
+                    return `
+                        <div class="p-4 rounded-2xl ${bgClass} mb-2">
+                            <div class="text-sm ${textClass}">${oIdx + 1}. ${opt}${label}</div>
+                            ${optImgHtml}
+                        </div>
+                    `;
+                }).join('');
+
                 div.innerHTML = `
-                    <h4 class="font-bold mb-2">Q${item.id}. ${item.q}</h4>
-                    ${imgHtml}
-                    <p class="text-sm ${isCorrect ? 'text-emerald-600' : 'text-rose-600'} mb-2">
-                        정답: ${item.answer + 1}번 / 나의 선택: ${userAnswers[item.id] !== undefined ? userAnswers[item.id] + 1 : '미선택'}번
-                    </p>
-                    <div class="p-4 bg-slate-50 rounded-xl text-sm border-l-4 border-blue-500">
-                        <b>해설:</b> ${item.explanation}
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="px-3 py-1 rounded-full text-xs font-bold ${isCorrect ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}">
+                            ${isCorrect ? '맞음' : '틀림'}
+                        </span>
+                        <span class="font-bold text-slate-400 text-sm">Q${item.id}</span>
+                    </div>
+                    <h4 class="text-lg font-bold mb-4 text-slate-800">${item.q}</h4>
+                    ${mainImgHtml}
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+                        ${optionsReviewHtml}
+                    </div>
+                    <div class="p-5 bg-blue-50 rounded-2xl text-sm border-l-4 border-blue-500">
+                        <div class="text-blue-800 font-bold mb-1">정답 해설</div>
+                        <div class="text-slate-700 leading-relaxed">${item.explanation}</div>
                     </div>
                 `;
                 reviewList.appendChild(div);
             });
-            window.scrollTo({top:0});
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     </script>
 </body>
