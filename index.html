@@ -63,6 +63,23 @@
             </div>
         </div>
 
+        <!-- Review Container (New: Result Page with All Explanations) -->
+        <div id="review-container" class="hidden">
+            <div class="flex justify-between items-end mb-6 border-b border-slate-200 pb-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-800">전체 문제 및 해설 보기</h2>
+                    <p class="text-slate-500 text-sm mt-1">정답과 오답 여부를 확인하고 해설을 학습하세요.</p>
+                </div>
+                <button onclick="restartQuiz(false)" class="px-5 py-2 bg-slate-800 text-white rounded-xl font-bold text-sm hover:bg-slate-700 transition-all">돌아가기</button>
+            </div>
+            <div id="review-list" class="space-y-6">
+                <!-- Explanations injected here -->
+            </div>
+            <div class="mt-10 text-center pb-10">
+                <button onclick="restartQuiz(false)" class="px-10 py-4 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 shadow-lg transition-all">학습 완료 및 다시 풀기</button>
+            </div>
+        </div>
+
         <!-- Start Placeholder -->
         <div id="start-placeholder" class="text-center py-20 bg-white rounded-3xl shadow-sm border border-slate-100">
             <h3 class="text-xl font-bold text-slate-400">등록된 문제가 없습니다.</h3>
@@ -73,9 +90,10 @@
         <div id="result-container" class="hidden text-center bg-white p-12 rounded-3xl shadow-2xl mt-8 max-w-2xl mx-auto border border-emerald-100">
             <h2 class="text-5xl font-black text-slate-800" id="score-display">00점</h2>
             <p class="text-xl mt-4 text-slate-500" id="result-message"></p>
-            <div class="flex flex-col sm:flex-row justify-center gap-4 mt-10">
-                <button onclick="restartQuiz(false)" class="px-8 py-4 bg-slate-800 text-white rounded-2xl font-bold hover:bg-slate-700">전체 다시 풀기</button>
-                <button id="review-wrong-btn" onclick="restartQuiz(true)" class="px-8 py-4 bg-rose-500 text-white rounded-2xl font-bold hover:bg-rose-600">오답 다시 풀기</button>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-10">
+                <button onclick="restartQuiz(false)" class="px-6 py-4 bg-slate-800 text-white rounded-2xl font-bold hover:bg-slate-700">전체 다시 풀기</button>
+                <button id="review-wrong-btn" onclick="restartQuiz(true)" class="px-6 py-4 bg-rose-500 text-white rounded-2xl font-bold hover:bg-rose-600">오답 다시 풀기</button>
+                <button onclick="showReviewPage()" class="sm:col-span-2 px-6 py-4 bg-blue-100 text-blue-700 rounded-2xl font-bold hover:bg-blue-200 border border-blue-200 transition-all">오답 해설 보기</button>
             </div>
         </div>
     </div>
@@ -174,6 +192,7 @@
             document.getElementById('start-placeholder').classList.add('hidden');
             document.getElementById('quiz-container').classList.remove('hidden');
             document.getElementById('result-container').classList.add('hidden');
+            document.getElementById('review-container').classList.add('hidden');
             
             restartQuiz(false);
         }
@@ -232,6 +251,7 @@
             document.getElementById('next-btn').classList.toggle('hidden', isLastPage);
             document.getElementById('submit-btn').classList.toggle('hidden', !isLastPage || isGraded);
         }
+
         function gradeQuiz() {
             isGraded = true;
             let correctCount = 0; wrongQuestions = [];
@@ -243,6 +263,49 @@
             document.getElementById('result-message').innerText = `${currentQuestions.length}문제 중 ${correctCount}문제 정답입니다.`;
             document.getElementById('review-wrong-btn').style.display = wrongQuestions.length > 0 ? 'inline-block' : 'none';
         }
+
+        function showReviewPage() {
+            document.getElementById('result-container').classList.add('hidden');
+            document.getElementById('review-container').classList.remove('hidden');
+            const reviewList = document.getElementById('review-list');
+            reviewList.innerHTML = '';
+
+            currentQuestions.forEach((item) => {
+                const isCorrect = userAnswers[item.id] === item.answer;
+                const reviewItem = document.createElement('div');
+                reviewItem.className = `p-6 bg-white rounded-2xl border ${isCorrect ? 'border-emerald-100' : 'border-rose-100'} shadow-sm`;
+                
+                let optionsListHtml = item.options.map((opt, idx) => {
+                    let textClass = "text-slate-600";
+                    let icon = "";
+                    if (idx === item.answer) {
+                        textClass = "text-emerald-600 font-bold";
+                        icon = " (정답)";
+                    } else if (!isCorrect && idx === userAnswers[item.id]) {
+                        textClass = "text-rose-600 font-bold";
+                        icon = " (나의 선택)";
+                    }
+                    return `<li class="py-1 ${textClass}">${idx+1}. ${opt}${icon}</li>`;
+                }).join('');
+
+                reviewItem.innerHTML = `
+                    <div class="flex justify-between items-start mb-3">
+                        <span class="px-3 py-1 rounded-full text-xs font-bold ${isCorrect ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}">
+                            Q${item.id} - ${isCorrect ? '맞힘' : '틀림'}
+                        </span>
+                    </div>
+                    <h4 class="text-lg font-bold text-slate-800 mb-2">${item.q}</h4>
+                    <ul class="text-sm mb-4 space-y-1">${optionsListHtml}</ul>
+                    <div class="p-4 bg-slate-50 rounded-xl text-sm border-l-4 border-blue-400">
+                        <p class="font-bold text-blue-800 mb-1">해설</p>
+                        <p class="text-slate-600 leading-relaxed">${item.explanation}</p>
+                    </div>
+                `;
+                reviewList.appendChild(reviewItem);
+            });
+            window.scrollTo({top: 0, behavior: 'smooth'});
+        }
+
         function restartQuiz(onlyWrong = false) {
             if (!onlyWrong) {
                 userAnswers = {};
@@ -253,6 +316,7 @@
             currentPage = 0; isGraded = false;
             document.getElementById('quiz-container').classList.remove('hidden');
             document.getElementById('result-container').classList.add('hidden');
+            document.getElementById('review-container').classList.add('hidden');
             renderQuestions();
         }
     </script>
