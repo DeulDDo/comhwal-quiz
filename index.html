@@ -9,7 +9,8 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700&display=swap');
         
-        :root { font-size: 14px; }
+        /* 기본 폰트 크기를 약 10% 키움 (14px -> 15.5px) */
+        :root { font-size: 15.5px; }
         body { 
             font-family: 'Pretendard', sans-serif; 
             background-color: #f8fafc; 
@@ -21,31 +22,30 @@
         }
 
         #app { 
-            max-width: 1000px; 
+            max-width: 1200px; /* 2x2 배열을 위해 최대 너비 확장 */
             margin: auto; 
-            padding: 1rem;
+            padding: 1.2rem;
             width: 100%;
         }
 
         .card { 
             transition: all 0.2s; 
-            border-radius: 12px;
-            padding: 1rem !important;
+            border-radius: 14px;
+            padding: 1.2rem !important;
             display: flex;
             flex-direction: column;
+            min-height: 420px; /* 카드 높이 균형 유지 */
         }
         
         .selected-option { background-color: #2563eb !important; color: white !important; border-color: #1e40af !important; }
         
-        .q-image { max-height: 140px; width: auto; margin: 0.5rem auto; border-radius: 8px; border: 1px solid #e2e8f0; }
-        .opt-image { max-height: 50px; width: auto; border-radius: 4px; margin-top: 0.2rem; display: block; border: 1px solid #cbd5e1; background: white; }
+        /* 이미지 크기도 소폭 확대 */
+        .q-image { max-height: 160px; width: auto; margin: 0.5rem auto; border-radius: 8px; border: 1px solid #e2e8f0; }
+        .opt-image { max-height: 55px; width: auto; border-radius: 4px; margin-top: 0.2rem; display: block; border: 1px solid #cbd5e1; background: white; }
         
-        .session-btn { padding: 0.5rem 1rem !important; font-size: 0.9rem; border-radius: 10px !important; }
+        .session-btn { padding: 0.6rem 1.2rem !important; font-size: 1rem; border-radius: 12px !important; }
         
         #admin-upload-zone { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; }
-        
-        /* 텍스트 줄임 방지 */
-        .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     </style>
 </head>
 <body class="bg-slate-50">
@@ -64,47 +64,47 @@
     </div>
 
     <div id="app">
-        <header class="mb-4 text-center">
-            <h1 class="text-2xl font-extrabold text-slate-800 mb-2">컴활 2급 퀴즈</h1>
+        <header class="mb-6 text-center">
+            <h1 class="text-3xl font-extrabold text-slate-800 mb-2">컴활 2급 퀴즈</h1>
             <div id="intro-section">
-                <p id="status-msg" class="text-slate-500 mb-4 text-sm">회차를 선택해 주세요.</p>
-                <div id="session-container" class="flex flex-wrap justify-center gap-2 mb-4"></div>
+                <p id="status-msg" class="text-slate-500 mb-4 text-base">회차를 선택해 주세요.</p>
+                <div id="session-container" class="flex flex-wrap justify-center gap-3 mb-4"></div>
             </div>
         </header>
 
         <div id="quiz-container" class="hidden">
-            <!-- 반응형 그리드: 모바일 1열, 태블릿 이상 2열 -->
-            <div id="question-list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            <!-- 반응형 그리드: 모바일 1열, PC 2열 -->
+            <div id="question-list" class="grid grid-cols-1 md:grid-cols-2 gap-5"></div>
 
-            <div class="flex justify-between items-center mt-6 pt-4 border-t border-slate-200">
-                <button id="prev-btn" onclick="changePage(-1)" class="px-4 py-2 bg-white border border-slate-300 text-slate-600 rounded-lg disabled:opacity-30 text-sm font-semibold">이전</button>
+            <div class="flex justify-between items-center mt-8 pt-6 border-t border-slate-200">
+                <button id="prev-btn" onclick="changePage(-1)" class="px-5 py-2.5 bg-white border border-slate-300 text-slate-600 rounded-xl disabled:opacity-30 text-base font-semibold shadow-sm hover:bg-slate-50 transition-all">이전</button>
                 <div class="text-center">
-                    <span id="page-info" class="font-bold text-lg text-slate-700 block leading-tight">1 / 10</span>
-                    <span id="session-info" class="text-xs text-blue-500 font-medium">1회차</span>
+                    <span id="page-info" class="font-bold text-xl text-slate-700 block leading-tight">1 / 5</span>
+                    <span id="session-info" class="text-sm text-blue-500 font-bold">1회차</span>
                 </div>
                 <div class="flex gap-2">
-                    <button id="next-btn" onclick="changePage(1)" class="px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold text-sm shadow-sm">다음</button>
-                    <button id="submit-btn" onclick="gradeQuiz()" class="hidden px-8 py-2 bg-emerald-600 text-white rounded-lg font-bold text-sm shadow-sm">채점</button>
+                    <button id="next-btn" onclick="changePage(1)" class="px-8 py-2.5 bg-blue-600 text-white rounded-xl font-semibold text-base shadow-md hover:bg-blue-700 transition-all">다음</button>
+                    <button id="submit-btn" onclick="gradeQuiz()" class="hidden px-10 py-2.5 bg-emerald-600 text-white rounded-xl font-bold text-base shadow-md hover:bg-emerald-700 transition-all">채점하기</button>
                 </div>
             </div>
         </div>
 
-        <div id="result-container" class="hidden text-center bg-white p-8 rounded-2xl shadow-xl border border-slate-100">
-            <h2 class="text-5xl font-black text-slate-800" id="score-display">0점</h2>
-            <p class="text-sm mt-4 text-slate-500">테스트가 종료되었습니다.</p>
-            <div class="flex flex-col sm:flex-row justify-center gap-2 mt-8">
-                <button onclick="restartQuiz()" class="px-5 py-3 bg-slate-800 text-white rounded-xl text-sm font-bold">다시 풀기</button>
-                <button onclick="showReviewPage()" class="px-5 py-3 bg-blue-100 text-blue-700 rounded-xl text-sm font-bold">오답 보기</button>
+        <div id="result-container" class="hidden text-center bg-white p-10 rounded-3xl shadow-xl border border-slate-100">
+            <h2 class="text-6xl font-black text-slate-800" id="score-display">0점</h2>
+            <p class="text-base mt-4 text-slate-500 font-medium">테스트가 종료되었습니다.</p>
+            <div class="flex flex-col sm:flex-row justify-center gap-3 mt-10">
+                <button onclick="restartQuiz()" class="px-7 py-4 bg-slate-800 text-white rounded-2xl text-base font-bold shadow-lg hover:bg-slate-900 transition-all">다시 풀기</button>
+                <button onclick="showReviewPage()" class="px-7 py-4 bg-blue-100 text-blue-700 rounded-2xl text-base font-bold hover:bg-blue-200 transition-all">오답 해설 보기</button>
             </div>
-            <button onclick="location.reload()" class="mt-4 text-slate-400 underline text-xs">다른 회차 선택</button>
+            <button onclick="location.reload()" class="mt-6 text-slate-400 underline text-sm">다른 회차 선택하기</button>
         </div>
 
         <div id="review-container" class="hidden">
-            <div class="flex justify-between items-center mb-4 bg-white p-4 rounded-xl shadow-sm">
-                <h2 class="text-lg font-bold">오답 해설</h2>
-                <button onclick="location.reload()" class="px-4 py-2 bg-slate-800 text-white rounded-lg text-xs font-bold">목록</button>
+            <div class="flex justify-between items-center mb-6 bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
+                <h2 class="text-xl font-bold text-slate-800">오답 해설</h2>
+                <button onclick="location.reload()" class="px-5 py-2 bg-slate-800 text-white rounded-xl text-sm font-bold">목록으로</button>
             </div>
-            <div id="review-list" class="space-y-4 pb-10"></div>
+            <div id="review-list" class="space-y-5 pb-12"></div>
         </div>
     </div>
 
@@ -114,16 +114,15 @@
         let userAnswers = {};
         let currentPage = 0;
         let currentSessionNum = null;
-        let questionsPerPage = 2; // 기본값
+        let questionsPerPage = 4; // PC 기준 기본 4문제 (2x2)
         const questionsPerSession = 20;
 
-        // 화면 크기에 따라 페이지당 문제 수 결정
         function updateQuestionsPerPage() {
-            const isMobile = window.innerWidth < 768; // Tailwind md 기준
+            const isMobile = window.innerWidth < 768;
             const oldVal = questionsPerPage;
-            questionsPerPage = isMobile ? 1 : 2;
+            // 모바일 1문제, PC 4문제(2줄)
+            questionsPerPage = isMobile ? 1 : 4;
             
-            // 값이 바뀌었을 때 현재 페이지를 조정하여 보던 위치 유지 시도
             if (oldVal !== questionsPerPage && currentQuestions.length > 0) {
                 renderQuestions();
             }
@@ -138,7 +137,7 @@
                 allQuestionsRaw = JSON.parse(savedData);
                 initSessions();
             } else {
-                document.getElementById('status-msg').innerHTML = "등록된 문제가 없습니다. (Ctrl+Alt+U)";
+                document.getElementById('status-msg').innerHTML = "등록된 문제가 없습니다. (Ctrl+Alt+U 키로 업로드)";
             }
 
             window.addEventListener('keydown', function(e) {
@@ -152,7 +151,7 @@
         function closeAdmin() { document.getElementById('admin-upload-zone').style.display = 'none'; }
 
         function clearData() {
-            if(confirm("문제를 삭제하시겠습니까?")) {
+            if(confirm("모든 데이터를 초기화하시겠습니까?")) {
                 localStorage.removeItem('quiz_data_v2');
                 location.reload();
             }
@@ -178,10 +177,10 @@
                         explanation: row.해설 || ""
                     }));
                     localStorage.setItem('quiz_data_v2', JSON.stringify(processedData));
-                    alert("업로드 완료!");
+                    alert("업로드가 완료되었습니다!");
                     location.reload(); 
                 } catch (err) {
-                    alert("파일 오류");
+                    alert("파일 처리 중 오류가 발생했습니다.");
                 }
             };
             reader.readAsBinaryString(file);
@@ -192,8 +191,8 @@
             const totalSessions = Math.ceil(allQuestionsRaw.length / questionsPerSession);
             for (let i = 1; i <= totalSessions; i++) {
                 const btn = document.createElement('button');
-                btn.innerText = `${i}회`;
-                btn.className = `session-btn px-4 py-2 border border-slate-200 rounded-xl bg-white text-slate-600 hover:bg-blue-50 hover:text-blue-600 font-bold shadow-sm`;
+                btn.innerText = `${i}회차`;
+                btn.className = `session-btn px-4 py-2 border border-slate-200 rounded-xl bg-white text-slate-600 hover:bg-blue-600 hover:text-white hover:border-blue-600 font-bold shadow-sm transition-all`;
                 btn.onclick = () => loadSession(i);
                 container.appendChild(btn);
             }
@@ -220,23 +219,26 @@
 
             pageItems.forEach(item => {
                 const card = document.createElement('div');
-                card.className = `card bg-white border border-slate-100 shadow-sm`;
+                card.className = `card bg-white border border-slate-100 shadow-md hover:shadow-lg transition-shadow`;
                 
                 const mainImgHtml = item.image ? `<img src="${item.image}" class="q-image" onerror="this.style.display='none'">` : '';
                 let optionsHtml = item.options.map((opt, oIdx) => {
                     const isSelected = userAnswers[item.id] === oIdx;
                     const optImgHtml = item.optionImages[oIdx] ? `<img src="${item.optionImages[oIdx]}" class="opt-image" onerror="this.style.display='none'">` : '';
-                    return `<button onclick="selectOption(${item.id}, ${oIdx})" class="w-full text-left p-2 px-3 rounded-lg mb-1 border transition-colors ${isSelected ? 'selected-option' : 'border-slate-100 hover:bg-blue-50 text-sm'}">
-                                <span class="font-medium">${oIdx + 1}. ${opt}</span>${optImgHtml}
+                    return `<button onclick="selectOption(${item.id}, ${oIdx})" class="w-full text-left p-2.5 px-4 rounded-xl mb-2 border transition-all ${isSelected ? 'selected-option' : 'border-slate-100 hover:bg-blue-50 text-sm'}">
+                                <span class="font-bold mr-2 text-blue-500">${oIdx + 1}.</span>
+                                <span class="font-medium">${opt}</span>${optImgHtml}
                             </button>`;
                 }).join('');
 
                 card.innerHTML = `
-                    <div class="flex items-center gap-2 mb-1"><span class="text-blue-500 font-bold text-xs uppercase tracking-tight">Question ${item.id}</span></div>
-                    <h3 class="text-sm font-bold mb-2 text-slate-800 leading-tight">${item.q}</h3>
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-blue-600 font-black text-sm uppercase tracking-widest">Question ${item.id}</span>
+                    </div>
+                    <h3 class="text-base font-bold mb-3 text-slate-800 leading-snug">${item.q}</h3>
                     ${mainImgHtml}
-                    ${item.detail ? `<div class="bg-slate-50 p-2 rounded-lg text-xs mb-2 text-slate-500 border border-slate-100">${item.detail}</div>` : ''}
-                    <div class="mt-auto">${optionsHtml}</div>`;
+                    ${item.detail ? `<div class="bg-slate-50 p-3 rounded-xl text-xs mb-3 text-slate-600 border border-slate-200 leading-relaxed">${item.detail}</div>` : ''}
+                    <div class="mt-auto space-y-1">${optionsHtml}</div>`;
                 list.appendChild(card);
             });
             updateNav();
@@ -274,17 +276,20 @@
             currentQuestions.forEach(item => {
                 const isCorrect = userAnswers[item.id] === item.answer;
                 const div = document.createElement('div');
-                div.className = `p-4 bg-white rounded-xl border-2 ${isCorrect ? 'border-emerald-100 bg-emerald-50/20' : 'border-rose-100 bg-rose-50/20'}`;
+                div.className = `p-5 bg-white rounded-2xl border-2 shadow-sm ${isCorrect ? 'border-emerald-100 bg-emerald-50/10' : 'border-rose-100 bg-rose-50/10'}`;
                 div.innerHTML = `
-                    <div class="flex items-start gap-2 mb-2">
-                        <span class="${isCorrect ? 'text-emerald-600' : 'text-rose-600'} font-bold text-lg">${isCorrect ? '✓' : '✕'}</span>
-                        <h4 class="text-sm font-bold">Q${item.id}. ${item.q}</h4>
+                    <div class="flex items-start gap-3 mb-3">
+                        <span class="${isCorrect ? 'text-emerald-600' : 'text-rose-600'} font-black text-2xl">${isCorrect ? '✓' : '✕'}</span>
+                        <h4 class="text-base font-bold text-slate-800">Q${item.id}. ${item.q}</h4>
                     </div>
-                    <div class="flex gap-4 items-center">
-                        <p class="text-xs text-blue-700 font-bold bg-blue-50 px-2 py-1 rounded">정답: ${item.answer + 1}번</p>
-                        ${userAnswers[item.id] !== undefined ? `<p class="text-xs text-slate-500">내 선택: ${userAnswers[item.id] + 1}번</p>` : ''}
+                    <div class="flex gap-4 items-center mb-3">
+                        <p class="text-sm text-blue-700 font-bold bg-blue-50 px-3 py-1 rounded-lg border border-blue-100">정답: ${item.answer + 1}번</p>
+                        ${userAnswers[item.id] !== undefined ? `<p class="text-sm text-slate-500 font-medium">내 선택: ${userAnswers[item.id] + 1}번</p>` : `<p class="text-sm text-rose-400 font-medium">미선택</p>`}
                     </div>
-                    <p class="text-xs text-slate-600 mt-2 p-2 bg-white/50 rounded border border-slate-100">${item.explanation || "등록된 해설이 없습니다."}</p>`;
+                    <div class="text-sm text-slate-600 p-4 bg-white/80 rounded-xl border border-slate-100 leading-relaxed">
+                        <strong class="text-slate-800 block mb-1">💡 해설</strong>
+                        ${item.explanation || "등록된 해설이 없습니다."}
+                    </div>`;
                 reviewList.appendChild(div);
             });
             window.scrollTo({ top: 0, behavior: 'smooth' });
