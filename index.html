@@ -19,14 +19,16 @@
         .hidden { display: none !important; }
         .card { border-radius: 14px; padding: 1.2rem !important; display: flex; flex-direction: column; min-height: 400px; transition: transform 0.2s; }
         .selected-option { background-color: #2563eb !important; color: white !important; border-color: #1e40af !important; }
-        #name-modal { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.8); z-index: 1000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(8px); }
+        #name-modal { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.85); z-index: 1000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(10px); }
         #admin-auth-modal { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.9); z-index: 2000; display: none; justify-content: center; align-items: center; }
-        #admin-panel { position: fixed; inset: 0; background: white; z-index: 2001; display: none; flex-direction: column; padding: 2rem; }
+        #admin-panel { position: fixed; inset: 0; background: white; z-index: 2001; display: none; flex-direction: column; padding: 2rem; overflow-y: auto; }
+        .pulse-animation { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
     </style>
 </head>
 <body class="bg-slate-50">
 
-    <!-- 이름 입력 모달 -->
+    <!-- 이름 입력 모달 (접속 시마다 뜸) -->
     <div id="name-modal">
         <div class="bg-white p-10 rounded-[2.5rem] shadow-2xl w-full max-w-md text-center mx-4 border border-slate-100">
             <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
@@ -35,14 +37,14 @@
                 </svg>
             </div>
             <h2 class="text-2xl font-bold mb-2 text-slate-800">응시자 등록</h2>
-            <p class="text-slate-400 mb-8 text-sm">기록 전송을 위해 성함을 입력해주세요.</p>
+            <p class="text-slate-400 mb-8 text-sm">성함을 입력하시면 문제 목록이 로드됩니다.</p>
             <input type="text" id="user-name-input" placeholder="성함 입력" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl mb-4 text-center text-xl focus:ring-4 focus:ring-blue-100 outline-none transition-all">
             <button onclick="saveUserName()" class="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold text-lg hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all active:scale-95">시작하기</button>
-            <p class="mt-6 text-[10px] text-slate-300">관리자 접속은 특정 단축키를 사용하세요.</p>
+            <p class="mt-6 text-[11px] text-slate-400">데이터는 브라우저에 안전하게 저장되어 있습니다.</p>
         </div>
     </div>
 
-    <!-- 관리자 인증 및 패널 (생략 가능하나 유지) -->
+    <!-- 관리자 인증 및 패널 -->
     <div id="admin-auth-modal">
         <div class="bg-slate-900 p-8 rounded-3xl border border-slate-700 w-full max-w-xs text-center">
             <h3 class="text-white font-bold mb-4">관리자 인증</h3>
@@ -61,14 +63,14 @@
                 <button onclick="closeAdminPanel()" class="text-slate-400 hover:text-slate-600">닫기 ✕</button>
             </div>
             <div class="bg-blue-50 p-8 rounded-3xl border border-blue-100 mb-6">
-                <h3 class="font-bold text-blue-800 mb-2">데이터 업로드 (Excel)</h3>
-                <p class="text-sm text-blue-600 mb-6">번호, 질문, 보기1~4, 정답번호(1~4), 해설 컬럼이 필요합니다.</p>
+                <h3 class="font-bold text-blue-800 mb-2">엑셀 문제 업로드</h3>
+                <p class="text-sm text-blue-600 mb-6">파일을 업로드하면 응시자 이름과 상관없이 기기에 저장됩니다.</p>
                 <input type="file" id="file-upload" accept=".xlsx, .xls" class="hidden" onchange="handleFileUpload(event)">
                 <label for="file-upload" class="inline-block px-8 py-4 bg-blue-600 text-white rounded-2xl font-bold cursor-pointer hover:bg-blue-700 shadow-xl shadow-blue-100 transition-all">파일 선택 및 업로드</label>
             </div>
             <div class="grid grid-cols-2 gap-4">
                 <div class="bg-slate-50 p-6 rounded-3xl border border-slate-200">
-                    <p class="text-sm text-slate-500 mb-1">현재 로드된 문제</p>
+                    <p class="text-sm text-slate-500 mb-1">현재 저장된 문제</p>
                     <p id="admin-count" class="text-2xl font-black text-slate-800">0개</p>
                 </div>
                 <button onclick="clearData()" class="bg-rose-50 p-6 rounded-3xl border border-rose-100 text-left hover:bg-rose-100 transition-all">
@@ -79,13 +81,14 @@
         </div>
     </div>
 
-    <!-- 메인 콘텐츠 영역 -->
-    <div id="app" class="hidden opacity-0 transition-opacity duration-500">
+    <!-- 메인 앱 인터페이스 -->
+    <div id="app" class="hidden opacity-0 transition-opacity duration-500 max-w-6xl mx-auto w-full p-4 md:p-8">
         <header class="mb-10 text-center">
             <div class="flex justify-center mb-4">
                 <span id="display-user-name" class="text-xs font-bold text-blue-600 bg-blue-50 px-4 py-1.5 rounded-full border border-blue-100 uppercase tracking-widest">USER: -</span>
             </div>
-            <h1 class="text-4xl font-black text-slate-800 mb-2 tracking-tight">컴활 2급 필기 마스터</h1>
+            <h1 class="text-4xl font-black text-slate-800 mb-2 tracking-tight">컴활 2급 필기 연습</h1>
+            <p class="text-slate-400 text-sm">업로드된 문제는 브라우저에 유지됩니다.</p>
         </header>
 
         <div id="intro-section" class="text-center">
@@ -95,38 +98,40 @@
             <div id="session-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 max-w-4xl mx-auto"></div>
         </div>
 
+        <!-- 퀴즈 진행 -->
         <div id="quiz-container" class="hidden">
             <div id="question-list" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
-            <div class="flex justify-between items-center mt-12 pt-8 border-t border-slate-200">
-                <button id="prev-btn" onclick="changePage(-1)" class="px-6 py-3 bg-white border border-slate-200 text-slate-500 rounded-2xl disabled:opacity-30 font-bold hover:bg-slate-50 transition-all">이전</button>
-                <div class="text-center">
+            <div class="flex flex-col md:flex-row justify-between items-center mt-12 pt-8 border-t border-slate-200 gap-6">
+                <button id="prev-btn" onclick="changePage(-1)" class="w-full md:w-auto px-6 py-3 bg-white border border-slate-200 text-slate-500 rounded-2xl disabled:opacity-30 font-bold hover:bg-slate-50 transition-all">이전</button>
+                <div class="text-center order-first md:order-none">
                     <span id="page-info" class="font-black text-2xl text-slate-800 block">1 / 5</span>
                     <span id="session-info" class="text-xs text-blue-500 font-bold tracking-widest uppercase">SESSION 1</span>
                 </div>
-                <div class="flex gap-3">
-                    <button id="next-btn" onclick="changePage(1)" class="px-10 py-3 bg-slate-800 text-white rounded-2xl font-bold shadow-lg hover:bg-slate-900 transition-all">다음</button>
-                    <button id="submit-btn" onclick="gradeQuiz()" class="hidden px-10 py-3 bg-blue-600 text-white rounded-2xl font-bold shadow-lg hover:bg-blue-700 transition-all">제출 및 채점</button>
+                <div class="flex gap-3 w-full md:w-auto">
+                    <button id="next-btn" onclick="changePage(1)" class="flex-1 md:flex-none px-10 py-3 bg-slate-800 text-white rounded-2xl font-bold shadow-lg hover:bg-slate-900 transition-all">다음</button>
+                    <button id="submit-btn" onclick="gradeQuiz()" class="hidden flex-1 md:flex-none px-10 py-3 bg-blue-600 text-white rounded-2xl font-bold shadow-lg hover:bg-blue-700 transition-all">제출 및 채점</button>
                 </div>
             </div>
         </div>
 
         <!-- 결과 화면 -->
-        <div id="result-container" class="hidden text-center max-w-2xl mx-auto bg-white p-12 rounded-[3rem] shadow-2xl border border-slate-50">
-            <!-- 전송 상태 표시줄 -->
-            <div id="transmission-status" class="hidden mb-6 p-3 rounded-xl text-sm font-bold animate-pulse"></div>
+        <div id="result-container" class="hidden text-center max-w-2xl mx-auto bg-white p-8 md:p-12 rounded-[2.5rem] shadow-2xl border border-slate-50">
+            <!-- 전송 상태 피드백 -->
+            <div id="transmission-status" class="hidden mb-6 p-4 rounded-2xl text-sm font-bold border"></div>
             
             <h2 class="text-sm font-bold text-blue-500 mb-4 tracking-widest uppercase">Your Result</h2>
-            <div class="text-8xl font-black text-slate-900 mb-6" id="score-display">0점</div>
+            <div class="text-7xl md:text-8xl font-black text-slate-900 mb-6" id="score-display">0점</div>
             <p class="text-slate-500 text-lg mb-10" id="result-text"></p>
             <div class="flex flex-col sm:flex-row justify-center gap-4">
-                <button onclick="restartQuiz()" class="px-8 py-4 bg-slate-900 text-white rounded-2xl font-bold hover:bg-black transition-all">다시 풀기</button>
-                <button onclick="showReviewPage()" class="px-8 py-4 bg-blue-50 text-blue-700 rounded-2xl font-bold hover:bg-blue-100 transition-all">오답 해설</button>
+                <button onclick="restartQuiz()" class="px-8 py-4 bg-slate-900 text-white rounded-2xl font-bold hover:bg-black transition-all">이 회차 다시 풀기</button>
+                <button onclick="showReviewPage()" class="px-8 py-4 bg-blue-50 text-blue-700 rounded-2xl font-bold hover:bg-blue-100 transition-all">오답 해설 보기</button>
             </div>
-            <button onclick="backToHome()" class="mt-8 text-slate-300 underline text-xs">다른 회차 선택하기</button>
+            <button onclick="backToHome()" class="mt-8 text-slate-400 hover:text-slate-600 underline text-xs">다른 회차 선택하기</button>
         </div>
 
+        <!-- 해설 화면 -->
         <div id="review-container" class="hidden">
-            <div class="flex justify-between items-center mb-8 sticky top-4 z-10 bg-slate-50/80 backdrop-blur-md p-4 rounded-2xl">
+            <div class="flex justify-between items-center mb-8 sticky top-4 z-10 bg-slate-50/80 backdrop-blur-md p-4 rounded-2xl border border-white shadow-sm">
                 <h2 class="text-2xl font-black text-slate-800">오답 해설지</h2>
                 <button onclick="backToHome()" class="px-6 py-2 bg-white border border-slate-200 text-slate-800 rounded-xl font-bold shadow-sm">목록으로</button>
             </div>
@@ -135,39 +140,46 @@
     </div>
 
     <script>
-        // [필독] 구글 앱스크립트 배포 후 받은 URL을 아래 큰따옴표 안에 넣으세요.
+        // 구글 스프레드시트 배포 URL을 여기에 입력하세요.
         const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwZlnPVeSY0nvxYBxp7nMi-V1dT1g56Vxxx-RYG_OS2nj2NncC8v36OUV-SM6hskA_J/exec"; 
         const ADMIN_PASSWORD = "1234"; 
         const QUESTIONS_PER_SESSION = 20;
         const QUESTIONS_PER_PAGE = 4;
 
-        let allQuestionsRaw = [];
-        let currentQuestions = [];
+        let allQuestionsRaw = []; // 엑셀에서 로드된 원본 데이터
+        let currentQuestions = []; // 현재 선택된 세션의 문제들
         let userAnswers = {};
         let currentPage = 0;
         let currentSessionNum = null;
         let userName = "";
 
+        // 페이지 로드 시 즉시 실행: 저장된 문제가 있는지 확인
+        window.onload = function() {
+            const savedData = localStorage.getItem('comhwal_data');
+            if (savedData) {
+                allQuestionsRaw = JSON.parse(savedData);
+                document.getElementById('admin-count').innerText = `${allQuestionsRaw.length}개`;
+            }
+        };
+
         function saveUserName() {
             const input = document.getElementById('user-name-input').value.trim();
             if (!input) { alert("성함을 입력해주세요."); return; }
             userName = input;
+            
+            // 모달 닫고 앱 표시
             document.getElementById('name-modal').classList.add('hidden');
             const app = document.getElementById('app');
             app.classList.remove('hidden');
             setTimeout(() => app.classList.replace('opacity-0', 'opacity-100'), 50);
             document.getElementById('display-user-name').innerText = `USER: ${userName}`;
-            loadStoredData();
-        }
-
-        function loadStoredData() {
-            const saved = localStorage.getItem('comhwal_data');
-            if (saved) {
-                allQuestionsRaw = JSON.parse(saved);
-                document.getElementById('status-msg').innerText = "회차를 선택해 주세요.";
+            
+            // 저장된 데이터로 세션 렌더링
+            if (allQuestionsRaw.length > 0) {
+                document.getElementById('status-msg').innerText = "학습할 회차를 선택해 주세요.";
                 renderSessions();
             } else {
-                document.getElementById('status-msg').innerHTML = "<div class='text-slate-300 py-20'>업로드된 문제가 없습니다.<br>관리자에게 문의하세요.</div>";
+                document.getElementById('status-msg').innerHTML = "<div class='text-slate-300 py-20'>현재 저장된 문제가 없습니다.<br>관리자 모드에서 엑셀 파일을 업로드해 주세요.</div>";
             }
         }
 
@@ -178,11 +190,10 @@
             for (let i = 1; i <= total; i++) {
                 const btn = document.createElement('button');
                 btn.className = "bg-white p-6 rounded-3xl border border-slate-200 text-slate-800 font-bold hover:border-blue-500 hover:text-blue-600 transition-all shadow-sm hover:shadow-md hover:-translate-y-1 active:scale-95";
-                btn.innerHTML = `<span class="block text-xs text-slate-300 mb-1">SESSION</span> <span class="text-xl">${i}회차</span>`;
+                btn.innerHTML = `<span class="block text-[10px] text-slate-400 mb-1 tracking-tighter">SESSION</span> <span class="text-xl">${i}회차</span>`;
                 btn.onclick = () => startSession(i);
                 container.appendChild(btn);
             }
-            document.getElementById('admin-count').innerText = `${allQuestionsRaw.length}개`;
         }
 
         function startSession(num) {
@@ -200,6 +211,7 @@
             const list = document.getElementById('question-list');
             list.innerHTML = '';
             const pageData = currentQuestions.slice(currentPage*QUESTIONS_PER_PAGE, (currentPage+1)*QUESTIONS_PER_PAGE);
+            
             pageData.forEach(item => {
                 const card = document.createElement('div');
                 card.className = "card bg-white border border-slate-100 shadow-sm p-6";
@@ -209,7 +221,13 @@
                         <span class="inline-block w-6 font-black ${active ? 'text-blue-200' : 'text-blue-500'}">${i+1}</span> ${opt}
                     </button>`;
                 }).join('');
-                card.innerHTML = `<div class="mb-4"><span class="text-[10px] font-black text-blue-500 bg-blue-50 px-2 py-1 rounded">Q. ${item.id}</span></div><h3 class="text-lg font-bold text-slate-800 mb-4 leading-tight">${item.q}</h3>${item.detail ? `<div class="bg-slate-50 p-4 rounded-2xl text-sm text-slate-500 mb-4 border-l-4 border-slate-200">${item.detail}</div>` : ''}<div class="mt-auto">${opts}</div>`;
+                
+                card.innerHTML = `
+                    <div class="mb-4"><span class="text-[10px] font-black text-blue-500 bg-blue-50 px-2 py-1 rounded">Q. ${item.id}</span></div>
+                    <h3 class="text-lg font-bold text-slate-800 mb-4 leading-tight">${item.q}</h3>
+                    ${item.detail ? `<div class="bg-slate-50 p-4 rounded-2xl text-sm text-slate-500 mb-4 border-l-4 border-slate-200">${item.detail}</div>` : ''}
+                    <div class="mt-auto pt-4">${opts}</div>
+                `;
                 list.appendChild(card);
             });
             updatePagination();
@@ -217,6 +235,7 @@
 
         function selectOpt(qId, idx) { userAnswers[qId] = idx; renderQuiz(); }
         function changePage(dir) { currentPage += dir; renderQuiz(); }
+        
         function updatePagination() {
             const total = Math.ceil(currentQuestions.length / QUESTIONS_PER_PAGE);
             document.getElementById('page-info').innerText = `${currentPage + 1} / ${total}`;
@@ -228,42 +247,36 @@
         }
 
         function gradeQuiz() {
-            let correct = 0;
+            let correctCount = 0;
             let detailLog = [];
             currentQuestions.forEach(q => { 
                 const isCorrect = userAnswers[q.id] === q.answer;
-                if(isCorrect) correct++; 
+                if(isCorrect) correctCount++; 
                 detailLog.push(`Q${q.id}:${isCorrect?'O':'X'}`);
             });
-            const score = Math.round((correct/currentQuestions.length)*100);
+            const score = Math.round((correctCount/currentQuestions.length)*100);
             
             document.getElementById('quiz-container').classList.add('hidden');
             document.getElementById('result-container').classList.remove('hidden');
             document.getElementById('score-display').innerText = `${score}점`;
-            document.getElementById('result-text').innerText = `${currentQuestions.length}문제 중 ${correct}문제를 맞혔습니다.`;
+            document.getElementById('result-text').innerText = `${currentQuestions.length}문제 중 ${correctCount}문제를 맞혔습니다.`;
 
-            // [추가] 결과 전송 함수 호출
-            sendToGoogleSheet(userName, score, correct, currentQuestions.length - correct, detailLog.join(","));
+            // 구글 시트로 전송
+            sendToGoogleSheet(userName, score, correctCount, currentQuestions.length - correctCount, detailLog.join(","));
         }
 
         async function sendToGoogleSheet(name, score, correct, wrong, details) {
             const statusDiv = document.getElementById('transmission-status');
-            if (!WEB_APP_URL || WEB_APP_URL.includes("입력하세요")) {
-                statusDiv.classList.remove('hidden');
-                statusDiv.className = "mb-6 p-3 rounded-xl text-sm font-bold bg-amber-50 text-amber-600";
-                statusDiv.innerText = "⚠️ 결과 전송 URL이 설정되지 않았습니다.";
-                return;
-            }
+            if (!WEB_APP_URL) return; // URL 없으면 자동 스킵
 
             statusDiv.classList.remove('hidden');
-            statusDiv.className = "mb-6 p-3 rounded-xl text-sm font-bold bg-blue-50 text-blue-600 animate-pulse";
-            statusDiv.innerText = "🚀 결과를 서버로 전송 중입니다...";
+            statusDiv.className = "mb-6 p-4 rounded-2xl text-sm font-bold border bg-blue-50 text-blue-600 border-blue-100 pulse-animation";
+            statusDiv.innerText = "🚀 구글 시트로 결과를 전송하고 있습니다...";
 
-            const now = new Date();
             const formData = new URLSearchParams();
             formData.append('name', name);
-            formData.append('date', now.toLocaleDateString());
-            formData.append('time', now.toLocaleTimeString());
+            formData.append('date', new Date().toLocaleDateString());
+            formData.append('time', new Date().toLocaleTimeString());
             formData.append('score', score);
             formData.append('correct', correct);
             formData.append('wrong', wrong);
@@ -271,26 +284,28 @@
             formData.append('session', `${currentSessionNum}회차`);
 
             try {
-                // fetch 옵션에 mode: 'no-cors'를 추가하여 CORS 이슈 회피
+                // mode: 'no-cors'를 사용하여 응답을 직접 읽지는 않더라도 데이터는 전송되게 함
                 await fetch(WEB_APP_URL, { 
                     method: 'POST', 
                     mode: 'no-cors', 
                     body: formData 
                 });
-                statusDiv.className = "mb-6 p-3 rounded-xl text-sm font-bold bg-emerald-50 text-emerald-600";
-                statusDiv.innerText = "✅ 전송 완료! 기록이 저장되었습니다.";
+                statusDiv.className = "mb-6 p-4 rounded-2xl text-sm font-bold border bg-emerald-50 text-emerald-600 border-emerald-100";
+                statusDiv.innerText = "✅ 데이터 전송 완료! 기록이 저장되었습니다.";
             } catch (err) { 
-                statusDiv.className = "mb-6 p-3 rounded-xl text-sm font-bold bg-rose-50 text-rose-600";
-                statusDiv.innerText = "❌ 전송 실패: 인터넷 연결이나 URL을 확인하세요.";
+                statusDiv.className = "mb-6 p-4 rounded-2xl text-sm font-bold border bg-rose-50 text-rose-600 border-rose-100";
+                statusDiv.innerText = "❌ 전송 실패: 인터넷 연결 상태를 확인해 주세요.";
             }
         }
 
+        // 관리자 관련 함수
         function openAdminAuth() { document.getElementById('admin-auth-modal').style.display = 'flex'; }
         function closeAdminAuth() { document.getElementById('admin-auth-modal').style.display = 'none'; document.getElementById('admin-pw').value=''; }
         function checkAdminPw() {
             if(document.getElementById('admin-pw').value === ADMIN_PASSWORD) {
                 closeAdminAuth();
                 document.getElementById('admin-panel').style.display = 'flex';
+                document.getElementById('admin-count').innerText = `${allQuestionsRaw.length}개`;
             } else { alert("비밀번호가 틀렸습니다."); }
         }
         function closeAdminPanel() { document.getElementById('admin-panel').style.display = 'none'; }
@@ -305,6 +320,7 @@
                     const workbook = XLSX.read(data, {type: 'binary'});
                     const sheet = workbook.Sheets[workbook.SheetNames[0]];
                     const json = XLSX.utils.sheet_to_json(sheet);
+                    
                     const processed = json.map((row, idx) => ({
                         id: row.번호 || idx + 1,
                         q: row.질문 || "내용 없음",
@@ -313,36 +329,59 @@
                         answer: parseInt(row.정답번호) - 1,
                         explanation: row.해설 || ""
                     }));
+                    
+                    // 핵심: LocalStorage에 저장하여 영구 유지
                     localStorage.setItem('comhwal_data', JSON.stringify(processed));
                     allQuestionsRaw = processed;
-                    alert(`${processed.length}문제가 성공적으로 저장되었습니다.`);
+                    
+                    alert(`${processed.length}개의 문제가 이 기기에 저장되었습니다.\n이제 이름만 입력하면 언제든 풀 수 있습니다.`);
                     renderSessions();
                     closeAdminPanel();
-                } catch(err) { alert("엑셀 파일 형식이 올바르지 않습니다."); }
+                    document.getElementById('status-msg').innerText = "학습할 회차를 선택해 주세요.";
+                } catch(err) { alert("엑셀 파일 형식이 올바르지 않습니다. (번호, 질문, 보기1~4, 정답번호, 해설 컬럼 확인)"); }
             };
             reader.readAsBinaryString(file);
         }
 
-        function clearData() { if(confirm("모든 데이터를 삭제하시겠습니까?")) { localStorage.removeItem('comhwal_data'); allQuestionsRaw = []; renderSessions(); } }
+        function clearData() { 
+            if(confirm("기기에 저장된 모든 문제 데이터를 삭제하시겠습니까?")) { 
+                localStorage.removeItem('comhwal_data'); 
+                allQuestionsRaw = []; 
+                document.getElementById('admin-count').innerText = "0개";
+                alert("삭제되었습니다.");
+                location.reload();
+            } 
+        }
 
         function showReviewPage() {
             document.getElementById('result-container').classList.add('hidden');
             document.getElementById('review-container').classList.remove('hidden');
             const list = document.getElementById('review-list');
             list.innerHTML = '';
+            
             currentQuestions.forEach(item => {
                 const isCorrect = userAnswers[item.id] === item.answer;
                 const div = document.createElement('div');
                 div.className = `p-6 rounded-3xl border-2 ${isCorrect ? 'border-emerald-100 bg-white' : 'border-rose-100 bg-white'}`;
+                
                 let opts = item.options.map((opt, i) => {
                     let style = "border-slate-50 text-slate-400";
                     if(item.answer === i) style = "bg-emerald-500 text-white border-emerald-600 font-bold";
                     else if(!isCorrect && userAnswers[item.id] === i) style = "bg-rose-500 text-white border-rose-600 font-bold";
                     return `<div class="p-3 px-4 rounded-xl mb-1.5 border text-sm ${style}">${i+1}. ${opt}</div>`;
                 }).join('');
-                div.innerHTML = `<h4 class="font-bold mb-4 text-slate-800">Q${item.id}. ${item.q}</h4><div>${opts}</div><div class="mt-4 p-4 bg-slate-50 rounded-2xl text-xs text-slate-500 leading-relaxed"><b class="text-blue-600">해설:</b> ${item.explanation || "제공된 해설이 없습니다."}</div>`;
+                
+                div.innerHTML = `
+                    <h4 class="font-bold mb-4 text-slate-800">Q${item.id}. ${item.q}</h4>
+                    <div>${opts}</div>
+                    <div class="mt-4 p-4 bg-slate-50 rounded-2xl text-xs text-slate-600 leading-relaxed">
+                        <p class="mb-1"><b class="text-blue-600">해설:</b></p>
+                        ${item.explanation || "제공된 해설이 없습니다."}
+                    </div>
+                `;
                 list.appendChild(div);
             });
+            window.scrollTo({top: 0, behavior: 'smooth'});
         }
 
         function backToHome() {
@@ -350,12 +389,14 @@
             document.getElementById('result-container').classList.add('hidden');
             document.getElementById('review-container').classList.add('hidden');
             document.getElementById('intro-section').classList.remove('hidden');
-            document.getElementById('transmission-status').classList.add('hidden'); // 상태 초기화
+            document.getElementById('transmission-status').classList.add('hidden');
             renderSessions();
+            window.scrollTo({top: 0, behavior: 'smooth'});
         }
 
         function restartQuiz() { if(currentSessionNum) startSession(currentSessionNum); }
 
+        // 관리자 단축키: Ctrl + Alt + U
         window.addEventListener('keydown', (e) => {
             if (e.ctrlKey && e.altKey && e.key.toLowerCase() === 'u') { openAdminAuth(); }
         });
