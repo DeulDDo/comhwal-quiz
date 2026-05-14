@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>컴퓨터활용능력 2급 필기 연습 (클라우드)</title>
+    <title>컴퓨터활용능력 2급 필기 연습 (이미지 지원)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
@@ -17,10 +17,16 @@
             flex-direction: column;
         }
         .hidden { display: none !important; }
-        .card { border-radius: 14px; padding: 1.2rem !important; display: flex; flex-direction: column; min-height: 400px; transition: transform 0.2s; }
+        .card { border-radius: 14px; padding: 1.2rem !important; display: flex; flex-direction: column; min-height: 450px; transition: all 0.2s; }
         .selected-option { background-color: #2563eb !important; color: white !important; border-color: #1e40af !important; }
+        
+        /* 이미지 최적화 스타일 */
+        .quiz-img-container { width: 100%; margin: 12px 0; background: white; border-radius: 10px; border: 1px solid #e2e8f0; overflow: hidden; }
+        .quiz-img { max-width: 100%; height: auto; display: block; margin: 0 auto; }
+        .option-img { max-width: 140px; height: auto; margin-top: 8px; border-radius: 4px; border: 1px solid #f1f5f9; background: white; }
+
         #name-modal { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.85); z-index: 1000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(10px); }
-        .pulse-animation { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        .pulse-animation { animation: pulse 2s infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
     </style>
 </head>
@@ -35,10 +41,10 @@
                 </svg>
             </div>
             <h2 class="text-2xl font-bold mb-2 text-slate-800">응시자 접속</h2>
-            <p class="text-slate-400 mb-8 text-sm">성함을 입력하시면 클라우드에서<br>최신 문제를 불러옵니다.</p>
+            <p class="text-slate-400 mb-8 text-sm">성함을 입력하시면 엑셀에서<br>이미지가 포함된 문제를 로드합니다.</p>
             <input type="text" id="user-name-input" placeholder="성함 입력" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl mb-4 text-center text-xl focus:ring-4 focus:ring-blue-100 outline-none transition-all">
-            <button id="start-btn" onclick="saveUserName()" class="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold text-lg hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all active:scale-95">시작하기</button>
-            <div id="loading-status" class="mt-4 text-xs text-blue-500 font-bold hidden">서버에서 문제 데이터를 확인 중...</div>
+            <button id="start-btn" onclick="saveUserName()" class="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold text-lg hover:bg-blue-700 shadow-lg transition-all active:scale-95">시작하기</button>
+            <div id="loading-status" class="mt-4 text-xs text-blue-500 font-bold hidden">서버에서 데이터 확인 중...</div>
         </div>
     </div>
 
@@ -49,12 +55,11 @@
                 <span id="display-user-name" class="text-xs font-bold text-blue-600 bg-blue-50 px-4 py-1.5 rounded-full border border-blue-100 uppercase tracking-widest">USER: -</span>
             </div>
             <h1 class="text-4xl font-black text-slate-800 mb-2 tracking-tight">컴활 2급 필기 연습</h1>
-            <p class="text-slate-400 text-sm">최신 데이터가 클라우드에서 자동 로드되었습니다.</p>
         </header>
 
         <div id="intro-section" class="text-center">
             <div id="status-container" class="mb-8">
-                <p id="status-msg" class="text-slate-500 font-medium">문제를 불러오는 중...</p>
+                <p id="status-msg" class="text-slate-500 font-medium">로딩 중...</p>
             </div>
             <div id="session-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 max-w-4xl mx-auto"></div>
         </div>
@@ -63,49 +68,41 @@
         <div id="quiz-container" class="hidden">
             <div id="question-list" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
             <div class="flex flex-col md:flex-row justify-between items-center mt-12 pt-8 border-t border-slate-200 gap-6">
-                <button id="prev-btn" onclick="changePage(-1)" class="w-full md:w-auto px-6 py-3 bg-white border border-slate-200 text-slate-500 rounded-2xl disabled:opacity-30 font-bold hover:bg-slate-50 transition-all">이전</button>
-                <div class="text-center order-first md:order-none">
+                <button id="prev-btn" onclick="changePage(-1)" class="w-full md:w-auto px-6 py-3 bg-white border border-slate-200 text-slate-500 rounded-2xl disabled:opacity-30 font-bold hover:bg-slate-50">이전</button>
+                <div class="text-center">
                     <span id="page-info" class="font-black text-2xl text-slate-800 block">1 / 5</span>
-                    <span id="session-info" class="text-xs text-blue-500 font-bold tracking-widest uppercase">SESSION 1</span>
+                    <span id="session-info" class="text-xs text-blue-500 font-bold uppercase">SESSION</span>
                 </div>
                 <div class="flex gap-3 w-full md:w-auto">
-                    <button id="next-btn" onclick="changePage(1)" class="flex-1 md:flex-none px-10 py-3 bg-slate-800 text-white rounded-2xl font-bold shadow-lg hover:bg-slate-900 transition-all">다음</button>
-                    <button id="submit-btn" onclick="gradeQuiz()" class="hidden flex-1 md:flex-none px-10 py-3 bg-blue-600 text-white rounded-2xl font-bold shadow-lg hover:bg-blue-700 transition-all">제출 및 채점</button>
+                    <button id="next-btn" onclick="changePage(1)" class="flex-1 md:flex-none px-10 py-3 bg-slate-800 text-white rounded-2xl font-bold shadow-lg hover:bg-slate-900">다음</button>
+                    <button id="submit-btn" onclick="gradeQuiz()" class="hidden flex-1 md:flex-none px-10 py-3 bg-blue-600 text-white rounded-2xl font-bold shadow-lg">제출 및 채점</button>
                 </div>
             </div>
         </div>
 
-        <!-- 결과 화면 -->
+        <!-- 결과 및 해설 화면 (생략 없이 통합 유지) -->
         <div id="result-container" class="hidden text-center max-w-2xl mx-auto bg-white p-8 md:p-12 rounded-[2.5rem] shadow-2xl border border-slate-50">
             <div id="transmission-status" class="hidden mb-6 p-4 rounded-2xl text-sm font-bold border"></div>
-            <h2 class="text-sm font-bold text-blue-500 mb-4 tracking-widest uppercase">Your Result</h2>
             <div class="text-7xl md:text-8xl font-black text-slate-900 mb-6" id="score-display">0점</div>
             <p class="text-slate-500 text-lg mb-10" id="result-text"></p>
             <div class="flex flex-col sm:flex-row justify-center gap-4">
-                <button onclick="restartQuiz()" class="px-8 py-4 bg-slate-900 text-white rounded-2xl font-bold hover:bg-black transition-all">이 회차 다시 풀기</button>
-                <button onclick="showReviewPage()" class="px-8 py-4 bg-blue-50 text-blue-700 rounded-2xl font-bold hover:bg-blue-100 transition-all">오답 해설 보기</button>
+                <button onclick="restartQuiz()" class="px-8 py-4 bg-slate-900 text-white rounded-2xl font-bold hover:bg-black">다시 풀기</button>
+                <button onclick="showReviewPage()" class="px-8 py-4 bg-blue-50 text-blue-700 rounded-2xl font-bold hover:bg-blue-100">오답 해설 보기</button>
             </div>
-            <button onclick="backToHome()" class="mt-8 text-slate-400 hover:text-slate-600 underline text-xs">다른 회차 선택하기</button>
+            <button onclick="backToHome()" class="mt-8 text-slate-400 hover:text-slate-600 underline text-xs">목록으로 돌아가기</button>
         </div>
 
-        <!-- 해설 화면 -->
         <div id="review-container" class="hidden">
-            <div class="flex justify-between items-center mb-8 sticky top-4 z-10 bg-slate-50/80 backdrop-blur-md p-4 rounded-2xl border border-white shadow-sm">
+            <div class="flex justify-between items-center mb-8 sticky top-4 z-10 bg-slate-50/80 backdrop-blur-md p-4 rounded-2xl border border-white">
                 <h2 class="text-2xl font-black text-slate-800">오답 해설지</h2>
-                <button onclick="backToHome()" class="px-6 py-2 bg-white border border-slate-200 text-slate-800 rounded-xl font-bold shadow-sm">목록으로</button>
+                <button onclick="backToHome()" class="px-6 py-2 bg-white border border-slate-200 text-slate-800 rounded-xl font-bold">목록으로</button>
             </div>
             <div id="review-list" class="grid grid-cols-1 md:grid-cols-2 gap-6 pb-20"></div>
         </div>
     </div>
 
     <script>
-        /**
-         * 구글 드라이브 설정 가이드:
-         * 1. 구글 드라이브에 엑셀 파일 업로드
-         * 2. 마우스 우클릭 -> 공유 -> 링크가 있는 모든 사용자에게 공개로 변경
-         * 3. 링크 복사 후 아래 DRIVE_FILE_URL에 붙여넣기
-         */
-        const DRIVE_FILE_URL = "https://docs.google.com/spreadsheets/d/1f-KujLflcoGDCKxWwz6aU6hXHitw-jdG/edit?usp=sharing&ouid=117372834452396975748&rtpof=true&sd=true"; 
+        const DRIVE_FILE_URL = "https://docs.google.com/spreadsheets/d/1f-KujLflcoGDCKxWwz6aU6hXHitw-jdG/edit?usp=sharing"; 
         const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwZlnPVeSY0nvxYBxp7nMi-V1dT1g56Vxxx-RYG_OS2nj2NncC8v36OUV-SM6hskA_J/exec"; 
         const QUESTIONS_PER_SESSION = 20;
         const QUESTIONS_PER_PAGE = 4;
@@ -115,10 +112,10 @@
         let userAnswers = {};
         let currentPage = 0;
         let currentSessionNum = null;
+        let currentSessionName = "";
         let userName = "";
         let isDataLoaded = false;
 
-        // 구글 드라이브 URL에서 File ID를 추출하여 직접 다운로드 링크로 변환하는 함수
         function getDirectDownloadLink(url) {
             try {
                 const fileId = url.match(/[-\w]{25,}/);
@@ -127,115 +124,79 @@
             return url;
         }
 
-        // 페이지 로드 시 클라우드 데이터 미리 로드
-        window.onload = function() {
-            if (DRIVE_FILE_URL && DRIVE_FILE_URL.includes("google.com")) {
-                loadCloudData();
-            } else {
-                console.warn("구글 드라이브 링크가 설정되지 않았습니다.");
-                const saved = localStorage.getItem('comhwal_data');
-                if (saved) {
-                    allQuestionsRaw = JSON.parse(saved);
-                    isDataLoaded = true;
-                }
-            }
-        };
+        window.onload = function() { loadCloudData(); };
 
         async function loadCloudData() {
             const loadingStatus = document.getElementById('loading-status');
             loadingStatus.classList.remove('hidden');
-            
             try {
                 const downloadUrl = getDirectDownloadLink(DRIVE_FILE_URL);
                 const response = await fetch(downloadUrl);
                 const arrayBuffer = await response.arrayBuffer();
-                const data = new Uint8Array(arrayBuffer);
-                const workbook = XLSX.read(data, { type: 'array' });
-                const sheet = workbook.Sheets[workbook.SheetNames[0]];
-                const json = XLSX.utils.sheet_to_json(sheet);
+                const workbook = XLSX.read(new Uint8Array(arrayBuffer), { type: 'array' });
+                const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
 
+                // 엑셀 열 이름 기준: 번호, 질문, 지문, 그림, 보기1, 보기2, 보기3, 보기4, 보기1그림, 보기2그림, 보기3그림, 보기4그림, 정답번호, 해설
                 allQuestionsRaw = json.map((row, idx) => ({
                     id: row.번호 || idx + 1,
                     q: row.질문 || "내용 없음",
                     detail: row.지문 || "",
-                    options: [String(row.보기1), String(row.보기2), String(row.보기3), String(row.보기4)],
-                    answer: parseInt(row.정답번호) - 1,
+                    img: row.그림 || "", // 질문 이미지 링크
+                    options: [String(row.보기1 || ""), String(row.보기2 || ""), String(row.보기3 || ""), String(row.보기4 || "")],
+                    optionImgs: [row.보기1그림 || "", row.보기2그림 || "", row.보기3그림 || "", row.보기4그림 || ""], // 보기별 이미지 링크
+                    answer: parseInt(row.정답번호 || 1) - 1,
                     explanation: row.해설 || ""
                 }));
 
                 isDataLoaded = true;
                 loadingStatus.innerText = "데이터 로드 완료!";
-                setTimeout(() => loadingStatus.classList.add('hidden'), 2000);
-                
-                // 로컬에도 백업 저장
-                localStorage.setItem('comhwal_data', JSON.stringify(allQuestionsRaw));
+                setTimeout(() => loadingStatus.classList.add('hidden'), 1000);
             } catch (error) {
-                console.error("Cloud Load Error:", error);
-                loadingStatus.innerText = "클라우드 로드 실패 (로컬 데이터 사용)";
-                const saved = localStorage.getItem('comhwal_data');
-                if (saved) allQuestionsRaw = JSON.parse(saved);
-                isDataLoaded = true;
+                console.error(error);
+                loadingStatus.innerText = "데이터 로드 중 오류 발생";
             }
         }
 
         function saveUserName() {
             const input = document.getElementById('user-name-input').value.trim();
-            if (!input) { alert("성함을 입력해주세요."); return; }
-            if (!isDataLoaded) { alert("데이터를 불러오는 중입니다. 잠시만 기다려주세요."); return; }
-            
+            if (!input) return alert("성함을 입력해주세요.");
+            if (!isDataLoaded) return alert("데이터를 불러오는 중입니다.");
             userName = input;
             document.getElementById('name-modal').classList.add('hidden');
             const app = document.getElementById('app');
             app.classList.remove('hidden');
             setTimeout(() => app.classList.replace('opacity-0', 'opacity-100'), 50);
             document.getElementById('display-user-name').innerText = `USER: ${userName}`;
-            
-            if (allQuestionsRaw.length > 0) {
-                document.getElementById('status-msg').innerText = "학습할 회차를 선택해 주세요.";
-                renderSessions();
-            } else {
-                document.getElementById('status-msg').innerHTML = "<div class='text-slate-300 py-20 font-bold'>저장된 문제가 없습니다. <br>구글 드라이브 링크를 확인해 주세요.</div>";
-            }
+            renderSessions();
         }
 
         function renderSessions() {
             const container = document.getElementById('session-container');
-    container.innerHTML = '';
-    
-    // 전체 문제를 20개 단위로 나눈 총 세션 수
-    const totalSessions = Math.ceil(allQuestionsRaw.length / QUESTIONS_PER_SESSION);
-    
-    for (let i = 1; i <= totalSessions; i++) {
-        const btn = document.createElement('button');
-        // i가 홀수면 1과목, 짝수면 2과목으로 표시 (회차는 2개 세션당 1회씩 증가)
-        const subjectNum = (i % 2 !== 0) ? 1 : 2;
-        const roundNum = Math.ceil(i / 2);
-        
-        btn.className = "bg-white p-5 rounded-3xl border border-slate-200 text-slate-800 font-bold hover:border-blue-500 hover:text-blue-600 transition-all shadow-sm hover:shadow-md hover:-translate-y-1 active:scale-95 text-center";
-        
-        btn.innerHTML = `
-            <span class="block text-[10px] text-blue-500 mb-1 tracking-tighter">${roundNum}회차</span>
-            <span class="text-lg">${subjectNum}과목</span>
-        `;
-        
-        // 클릭 시 해당 섹션 번호(i) 전달
-        btn.onclick = () => startSession(i, `${roundNum}회 ${subjectNum}과목`);
-        container.appendChild(btn);
-    }
-}
+            container.innerHTML = '';
+            const totalSessions = Math.ceil(allQuestionsRaw.length / QUESTIONS_PER_SESSION);
+            for (let i = 1; i <= totalSessions; i++) {
+                const subjectNum = (i % 2 !== 0) ? 1 : 2;
+                const roundNum = Math.ceil(i / 2);
+                const btn = document.createElement('button');
+                btn.className = "bg-white p-5 rounded-3xl border border-slate-200 text-slate-800 font-bold hover:border-blue-500 transition-all text-center shadow-sm";
+                btn.innerHTML = `<span class="block text-[10px] text-blue-500 mb-1">${roundNum}회차</span><span class="text-lg">${subjectNum}과목</span>`;
+                btn.onclick = () => startSession(i, `${roundNum}회 ${subjectNum}과목`);
+                container.appendChild(btn);
+            }
+            document.getElementById('status-msg').innerText = "학습할 과목을 선택하세요.";
+        }
 
-// startSession 함수도 세션 이름을 받도록 살짝 수정
-function startSession(num, sessionTitle) {
-    currentSessionNum = num; // 내부 로직용 인덱스
-    currentSessionName = sessionTitle; // 전송 및 표시용 이름
-    currentQuestions = allQuestionsRaw.slice((num-1)*QUESTIONS_PER_SESSION, num*QUESTIONS_PER_SESSION);
-    userAnswers = {};
-    currentPage = 0;
-    document.getElementById('intro-section').classList.add('hidden');
-    document.getElementById('quiz-container').classList.remove('hidden');
-    document.getElementById('session-info').innerText = sessionTitle;
-    renderQuiz();
-}
+        function startSession(num, title) {
+            currentSessionNum = num;
+            currentSessionName = title;
+            currentQuestions = allQuestionsRaw.slice((num-1)*QUESTIONS_PER_SESSION, num*QUESTIONS_PER_SESSION);
+            userAnswers = {};
+            currentPage = 0;
+            document.getElementById('intro-section').classList.add('hidden');
+            document.getElementById('quiz-container').classList.remove('hidden');
+            document.getElementById('session-info').innerText = title;
+            renderQuiz();
+        }
 
         function renderQuiz() {
             const list = document.getElementById('question-list');
@@ -245,18 +206,31 @@ function startSession(num, sessionTitle) {
             pageData.forEach(item => {
                 const card = document.createElement('div');
                 card.className = "card bg-white border border-slate-100 shadow-sm p-6";
-                let opts = item.options.map((opt, i) => {
+                
+                // 질문 이미지 처리
+                const mainImgHtml = item.img ? `<div class="quiz-img-container"><img src="${item.img}" class="quiz-img" alt="질문 이미지"></div>` : '';
+
+                // 보기 및 보기 이미지 처리
+                const optsHtml = item.options.map((opt, i) => {
                     const active = userAnswers[item.id] === i;
-                    return `<button onclick="selectOpt(${item.id}, ${i})" class="w-full text-left p-4 rounded-2xl mb-2 border transition-all ${active ? 'selected-option border-blue-700 shadow-lg' : 'border-slate-100 hover:bg-slate-50 text-slate-600'}">
-                        <span class="inline-block w-6 font-black ${active ? 'text-blue-200' : 'text-blue-500'}">${i+1}</span> ${opt}
+                    const optImgHtml = item.optionImgs[i] ? `<img src="${item.optionImgs[i]}" class="option-img" alt="보기 ${i+1} 이미지">` : '';
+                    return `<button onclick="selectOpt(${item.id}, ${i})" class="w-full text-left p-4 rounded-2xl mb-3 border transition-all ${active ? 'selected-option border-blue-700' : 'border-slate-100 hover:bg-slate-50 text-slate-600'}">
+                        <div class="flex items-start">
+                            <span class="inline-block w-6 font-black shrink-0 ${active ? 'text-blue-200' : 'text-blue-500'}">${i+1}</span>
+                            <div class="flex-1">
+                                <span>${opt}</span>
+                                ${optImgHtml}
+                            </div>
+                        </div>
                     </button>`;
                 }).join('');
                 
                 card.innerHTML = `
-                    <div class="mb-4"><span class="text-[10px] font-black text-blue-500 bg-blue-50 px-2 py-1 rounded">Q. ${item.id}</span></div>
-                    <h3 class="text-lg font-bold text-slate-800 mb-4 leading-tight">${item.q}</h3>
+                    <div class="mb-2"><span class="text-[10px] font-black text-blue-500 bg-blue-50 px-2 py-1 rounded">Q. ${item.id}</span></div>
+                    <h3 class="text-lg font-bold text-slate-800 mb-3 leading-tight">${item.q}</h3>
+                    ${mainImgHtml}
                     ${item.detail ? `<div class="bg-slate-50 p-4 rounded-2xl text-sm text-slate-500 mb-4 border-l-4 border-slate-200 whitespace-pre-wrap font-mono">${item.detail}</div>` : ''}
-                    <div class="mt-auto pt-4">${opts}</div>
+                    <div class="mt-auto">${optsHtml}</div>
                 `;
                 list.appendChild(card);
             });
@@ -278,48 +252,36 @@ function startSession(num, sessionTitle) {
 
         function gradeQuiz() {
             let correctCount = 0;
-            let detailLog = [];
+            let log = [];
             currentQuestions.forEach(q => { 
                 const isCorrect = userAnswers[q.id] === q.answer;
                 if(isCorrect) correctCount++; 
-                detailLog.push(`Q${q.id}:${isCorrect?'O':'X'}`);
+                log.push(`Q${q.id}:${isCorrect?'O':'X'}`);
             });
             const score = Math.round((correctCount/currentQuestions.length)*100);
-            
             document.getElementById('quiz-container').classList.add('hidden');
             document.getElementById('result-container').classList.remove('hidden');
             document.getElementById('score-display').innerText = `${score}점`;
             document.getElementById('result-text').innerText = `${currentQuestions.length}문제 중 ${correctCount}문제를 맞혔습니다.`;
-
-            sendToGoogleSheet(userName, score, correctCount, currentQuestions.length - correctCount, detailLog.join(","));
+            sendToGoogleSheet(userName, score, correctCount, currentQuestions.length - correctCount, log.join(","));
         }
 
         async function sendToGoogleSheet(name, score, correct, wrong, details) {
             const statusDiv = document.getElementById('transmission-status');
-            if (!WEB_APP_URL || WEB_APP_URL.includes("macros/s/")) {
-                statusDiv.classList.remove('hidden');
-                statusDiv.className = "mb-6 p-4 rounded-2xl text-sm font-bold border bg-blue-50 text-blue-600 border-blue-100 pulse-animation";
-                statusDiv.innerText = "🚀 구글 시트로 결과를 전송하고 있습니다...";
+            statusDiv.classList.remove('hidden');
+            statusDiv.className = "mb-6 p-4 rounded-2xl text-sm font-bold border bg-blue-50 text-blue-600 border-blue-100 pulse-animation";
+            statusDiv.innerText = "🚀 전송 중...";
+            
+            const formData = new URLSearchParams({
+                name, date: new Date().toLocaleDateString(), time: new Date().toLocaleTimeString(),
+                score, correct, wrong, details, session: currentSessionName
+            });
 
-                const formData = new URLSearchParams();
-                formData.append('name', name);
-		formData.append('date', new Date().toLocaleDateString()); 
-   		formData.append('time', new Date().toLocaleTimeString());
-                formData.append('score', score);
-                formData.append('correct', correct);
-                formData.append('wrong', wrong);
-                formData.append('details', details);
-                formData.append('session', `${currentSessionNum}회차`);
-
-                try {
-                    await fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', body: formData });
-                    statusDiv.className = "mb-6 p-4 rounded-2xl text-sm font-bold border bg-emerald-50 text-emerald-600 border-emerald-100";
-                    statusDiv.innerText = "✅ 데이터 전송 완료!";
-                } catch (err) { 
-                    statusDiv.className = "mb-6 p-4 rounded-2xl text-sm font-bold border bg-rose-50 text-rose-600 border-rose-100";
-                    statusDiv.innerText = "❌ 전송 실패";
-                }
-            }
+            try {
+                await fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', body: formData });
+                statusDiv.className = "mb-6 p-4 rounded-2xl text-sm font-bold border bg-emerald-50 text-emerald-600 border-emerald-100";
+                statusDiv.innerText = "✅ 기록 전송 완료!";
+            } catch (err) { statusDiv.innerText = "❌ 전송 오류"; }
         }
 
         function showReviewPage() {
@@ -333,19 +295,22 @@ function startSession(num, sessionTitle) {
                 const div = document.createElement('div');
                 div.className = `p-6 rounded-3xl border-2 bg-white ${isCorrect ? 'border-emerald-100' : 'border-rose-100'}`;
                 
-                let opts = item.options.map((opt, i) => {
+                const reviewImgHtml = item.img ? `<div class="quiz-img-container"><img src="${item.img}" class="quiz-img" alt="질문"></div>` : '';
+
+                const opts = item.options.map((opt, i) => {
                     let style = "border-slate-50 text-slate-400";
                     if(item.answer === i) style = "bg-emerald-500 text-white border-emerald-600 font-bold";
                     else if(!isCorrect && userAnswers[item.id] === i) style = "bg-rose-500 text-white border-rose-600 font-bold";
-                    return `<div class="p-3 px-4 rounded-xl mb-1.5 border text-sm ${style}">${i+1}. ${opt}</div>`;
+                    const optImg = item.optionImgs[i] ? `<img src="${item.optionImgs[i]}" class="option-img opacity-80" alt="보기">` : '';
+                    return `<div class="p-3 px-4 rounded-xl mb-1.5 border text-sm ${style}">${i+1}. ${opt}${optImg}</div>`;
                 }).join('');
                 
                 div.innerHTML = `
-                    <h4 class="font-bold mb-4 text-slate-800">Q${item.id}. ${item.q}</h4>
+                    <h4 class="font-bold mb-2 text-slate-800">Q${item.id}. ${item.q}</h4>
+                    ${reviewImgHtml}
                     <div>${opts}</div>
-                    <div class="mt-4 p-4 bg-slate-50 rounded-2xl text-xs text-slate-600 leading-relaxed">
-                        <p class="mb-1 font-black text-blue-600">해설:</p>
-                        ${item.explanation || "제공된 해설이 없습니다."}
+                    <div class="mt-4 p-4 bg-slate-50 rounded-2xl text-xs text-slate-600">
+                        <p class="mb-1 font-black text-blue-600">해설:</p>${item.explanation || "해설 없음"}
                     </div>
                 `;
                 list.appendChild(div);
@@ -354,16 +319,12 @@ function startSession(num, sessionTitle) {
         } 
 
         function backToHome() {
-            document.getElementById('quiz-container').classList.add('hidden');
-            document.getElementById('result-container').classList.add('hidden');
-            document.getElementById('review-container').classList.add('hidden');
+            document.querySelectorAll('#quiz-container, #result-container, #review-container').forEach(el => el.classList.add('hidden'));
             document.getElementById('intro-section').classList.remove('hidden');
-            document.getElementById('transmission-status').classList.add('hidden');
             renderSessions();
-            window.scrollTo({top: 0, behavior: 'smooth'});
         }
 
-        function restartQuiz() { if(currentSessionNum) startSession(currentSessionNum); }
+        function restartQuiz() { if(currentSessionNum) startSession(currentSessionNum, currentSessionName); }
     </script>
 </body>
 </html>
