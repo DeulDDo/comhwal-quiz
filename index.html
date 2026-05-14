@@ -261,8 +261,9 @@
                         <div class="flex items-start">
                             <span class="inline-block w-6 font-black shrink-0 ${active ? 'text-blue-200' : 'text-blue-500'}">${i+1}</span>
                             <div class="flex-1">
+				${optImgHtml}
                                 <span>${opt}</span>
-                                ${optImgHtml}
+                                
                             </div>
                         </div>
                     </button>`;
@@ -360,8 +361,9 @@
                     
                     const optImgHtml = item.optionImages[i] ? `<img src="${item.optionImages[i]}" class="opt-image opacity-80">` : '';
                     return `<div class="p-3 px-4 rounded-xl mb-1.5 border text-sm ${style}">
-                        ${i+1}. ${opt}
+                        ${i+1}. 
                         ${optImgHtml}
+			${opt}
                     </div>`;
                 }).join('');
                 
