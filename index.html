@@ -200,27 +200,42 @@
 
         function renderSessions() {
             const container = document.getElementById('session-container');
-            container.innerHTML = '';
-            const total = Math.ceil(allQuestionsRaw.length / QUESTIONS_PER_SESSION);
-            for (let i = 1; i <= total; i++) {
-                const btn = document.createElement('button');
-                btn.className = "bg-white p-6 rounded-3xl border border-slate-200 text-slate-800 font-bold hover:border-blue-500 hover:text-blue-600 transition-all shadow-sm hover:shadow-md hover:-translate-y-1 active:scale-95";
-                btn.innerHTML = `<span class="block text-[10px] text-slate-400 mb-1 tracking-tighter">SESSION</span> <span class="text-xl">${i}회차</span>`;
-                btn.onclick = () => startSession(i);
-                container.appendChild(btn);
-            }
-        }
+    container.innerHTML = '';
+    
+    // 전체 문제를 20개 단위로 나눈 총 세션 수
+    const totalSessions = Math.ceil(allQuestionsRaw.length / QUESTIONS_PER_SESSION);
+    
+    for (let i = 1; i <= totalSessions; i++) {
+        const btn = document.createElement('button');
+        // i가 홀수면 1과목, 짝수면 2과목으로 표시 (회차는 2개 세션당 1회씩 증가)
+        const subjectNum = (i % 2 !== 0) ? 1 : 2;
+        const roundNum = Math.ceil(i / 2);
+        
+        btn.className = "bg-white p-5 rounded-3xl border border-slate-200 text-slate-800 font-bold hover:border-blue-500 hover:text-blue-600 transition-all shadow-sm hover:shadow-md hover:-translate-y-1 active:scale-95 text-center";
+        
+        btn.innerHTML = `
+            <span class="block text-[10px] text-blue-500 mb-1 tracking-tighter">${roundNum}회차</span>
+            <span class="text-lg">${subjectNum}과목</span>
+        `;
+        
+        // 클릭 시 해당 섹션 번호(i) 전달
+        btn.onclick = () => startSession(i, `${roundNum}회 ${subjectNum}과목`);
+        container.appendChild(btn);
+    }
+}
 
-        function startSession(num) {
-            currentSessionNum = num;
-            currentQuestions = allQuestionsRaw.slice((num-1)*QUESTIONS_PER_SESSION, num*QUESTIONS_PER_SESSION);
-            userAnswers = {};
-            currentPage = 0;
-            document.getElementById('intro-section').classList.add('hidden');
-            document.getElementById('quiz-container').classList.remove('hidden');
-            document.getElementById('session-info').innerText = `SESSION ${num}`;
-            renderQuiz();
-        }
+// startSession 함수도 세션 이름을 받도록 살짝 수정
+function startSession(num, sessionTitle) {
+    currentSessionNum = num; // 내부 로직용 인덱스
+    currentSessionName = sessionTitle; // 전송 및 표시용 이름
+    currentQuestions = allQuestionsRaw.slice((num-1)*QUESTIONS_PER_SESSION, num*QUESTIONS_PER_SESSION);
+    userAnswers = {};
+    currentPage = 0;
+    document.getElementById('intro-section').classList.add('hidden');
+    document.getElementById('quiz-container').classList.remove('hidden');
+    document.getElementById('session-info').innerText = sessionTitle;
+    renderQuiz();
+}
 
         function renderQuiz() {
             const list = document.getElementById('question-list');
@@ -288,6 +303,8 @@
 
                 const formData = new URLSearchParams();
                 formData.append('name', name);
+		formData.append('date', new Date().toLocaleDateString()); 
+   		formData.append('time', new Date().toLocaleTimeString());
                 formData.append('score', score);
                 formData.append('correct', correct);
                 formData.append('wrong', wrong);
