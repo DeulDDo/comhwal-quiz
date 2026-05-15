@@ -27,7 +27,6 @@
         .q-image { max-height: 250px; width: auto; max-width: 100%; display: block; }
         .opt-image { max-height: 80px; width: auto; max-width: 100%; border-radius: 4px; display: block; border: 1px solid #cbd5e1; background: white; }
 
-        /* 해설 들여쓰기 및 정렬 문제 완전 해결을 위한 스타일 */
         .explanation-box {
             display: block;
             width: 100%;
@@ -183,7 +182,8 @@
                         convertDriveLink(row.보기4그림)
                     ],
                     answer: parseInt(row.정답번호) - 1,
-                    explanation: row.해설 || ""
+                    explanation: row.해설 || "",
+                    expImage1: convertDriveLink(row.해설그림1 || ""),
                 }));
 
                 isDataLoaded = true;
@@ -380,8 +380,13 @@
                     return `<div class="p-3 px-4 rounded-xl mb-1.5 border text-sm ${style}">${i+1}. ${optImgHtml}${opt}</div>`;
                 }).join('');
                 
-                // 해설 부분의 불필요한 줄바꿈과 공백을 자바스크립트 수준에서 완전히 제거
-                const explanationHtml = `<div class="explanation-box"><div class="explanation-content">${(item.explanation || "제공된 해설이 없습니다.").trim()}</div></div>`;
+                const expImgHtml = item.expImage1 ? `<div class="img-container mt-4"><img src="${item.expImage1}" class="q-image" loading="lazy"></div>` : '';
+                const explanationHtml = `
+                    <div class="explanation-box">
+                        <div class="explanation-content">${(item.explanation || "제공된 해설이 없습니다.").trim()}</div>
+                        ${expImgHtml}
+                    </div>
+                `;
                 
                 div.innerHTML = `
                     <h4 class="font-bold mb-4 text-slate-800">Q${item.id}. ${item.q}</h4>
