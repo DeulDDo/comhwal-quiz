@@ -233,10 +233,11 @@
             document.getElementById('intro-section').classList.add('hidden');
             document.getElementById('quiz-container').classList.remove('hidden');
             document.getElementById('session-info').innerText = sessionTitle;
-            renderQuiz();
+            renderQuiz(true); // 처음 시작할 때는 스크롤 위로
         }
 
-        function renderQuiz() {
+        // renderQuiz 파라미터 추가: shouldScroll
+        function renderQuiz(shouldScroll = false) {
             const list = document.getElementById('question-list');
             list.innerHTML = '';
             const pageData = currentQuestions.slice(currentPage*QUESTIONS_PER_PAGE, (currentPage+1)*QUESTIONS_PER_PAGE);
@@ -249,7 +250,6 @@
 
                 let opts = item.options.map((opt, i) => {
                     const active = userAnswers[item.id] === i;
-                    // mb-2 추가: 이미지와 텍스트 사이 여백
                     const optImgHtml = item.optionImages[i] ? `<img src="${item.optionImages[i]}" class="opt-image mb-2" loading="lazy">` : '';
                     return `<button onclick="selectOpt(${item.id}, ${i})" class="w-full text-left p-4 rounded-2xl mb-2 border transition-all ${active ? 'selected-option border-blue-700 shadow-lg' : 'border-slate-100 hover:bg-slate-50 text-slate-600'}">
                         <div class="flex items-start">
@@ -271,20 +271,34 @@
                 `;
                 list.appendChild(card);
             });
-            updatePagination();
+            updatePagination(shouldScroll);
         }
 
-        function selectOpt(qId, idx) { userAnswers[qId] = idx; renderQuiz(); }
-        function changePage(dir) { currentPage += dir; renderQuiz(); }
+        // 답안 선택 시에는 shouldScroll을 false로 전달하여 스크롤 고정
+        function selectOpt(qId, idx) { 
+            userAnswers[qId] = idx; 
+            renderQuiz(false); 
+        }
+
+        // 페이지 이동 시에는 shouldScroll을 true로 전달하여 맨 위로 이동
+        function changePage(dir) { 
+            currentPage += dir; 
+            renderQuiz(true); 
+        }
         
-        function updatePagination() {
+        // updatePagination 파라미터 추가: shouldScroll
+        function updatePagination(shouldScroll) {
             const total = Math.ceil(currentQuestions.length / QUESTIONS_PER_PAGE);
             document.getElementById('page-info').innerText = `${currentPage + 1} / ${total}`;
             document.getElementById('prev-btn').disabled = (currentPage === 0);
             const isLast = (currentPage >= total - 1);
             document.getElementById('next-btn').classList.toggle('hidden', isLast);
             document.getElementById('submit-btn').classList.toggle('hidden', !isLast);
-            window.scrollTo({top: 0, behavior: 'smooth'});
+            
+            // 페이지 이동 시에만 스크롤을 맨 위로 보냄
+            if (shouldScroll) {
+                window.scrollTo({top: 0, behavior: 'smooth'});
+            }
         }
 
         function gradeQuiz() {
@@ -303,6 +317,7 @@
             document.getElementById('result-text').innerText = `${currentQuestions.length}문제 중 ${correctCount}문제를 맞혔습니다.`;
 
             sendToGoogleSheet(userName, score, correctCount, currentQuestions.length - correctCount, detailLog.join(","));
+            window.scrollTo({top: 0, behavior: 'smooth'});
         }
 
         async function sendToGoogleSheet(name, score, correct, wrong, details) {
@@ -351,12 +366,11 @@
                     if(item.answer === i) style = "bg-emerald-500 text-white border-emerald-600 font-bold";
                     else if(!isCorrect && userAnswers[item.id] === i) style = "bg-rose-500 text-white border-rose-600 font-bold";
                     
-                    // mb-2 추가: 이미지와 텍스트 사이 여백
                     const optImgHtml = item.optionImages[i] ? `<img src="${item.optionImages[i]}" class="opt-image opacity-80 mb-2">` : '';
                     return `<div class="p-3 px-4 rounded-xl mb-1.5 border text-sm ${style}">
                         ${i+1}. 
-                        ${optImgHtml} ${opt}
-                        
+                        ${optImgHtml}
+                        ${opt}
                     </div>`;
                 }).join('');
                 
