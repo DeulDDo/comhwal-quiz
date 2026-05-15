@@ -26,6 +26,14 @@
         .img-container { width: 100%; background: white; border-radius: 8px; border: 1px solid #e2e8f0; margin: 0.8rem 0; overflow: hidden; display: flex; justify-content: center; align-items: center; min-height: 50px; }
         .q-image { max-height: 250px; width: auto; max-width: 100%; display: block; }
         .opt-image { max-height: 80px; width: auto; max-width: 100%; border-radius: 4px; display: block; border: 1px solid #cbd5e1; background: white; }
+
+        /* 해설 들여쓰기 방지용 스타일 */
+        .explanation-content {
+            white-space: pre-wrap;
+            display: block;
+            width: 100%;
+            text-align: left;
+        }
     </style>
 </head>
 <body class="bg-slate-50">
@@ -233,10 +241,9 @@
             document.getElementById('intro-section').classList.add('hidden');
             document.getElementById('quiz-container').classList.remove('hidden');
             document.getElementById('session-info').innerText = sessionTitle;
-            renderQuiz(true); // 처음 시작할 때는 스크롤 위로
+            renderQuiz(true);
         }
 
-        // renderQuiz 파라미터 추가: shouldScroll
         function renderQuiz(shouldScroll = false) {
             const list = document.getElementById('question-list');
             list.innerHTML = '';
@@ -274,19 +281,16 @@
             updatePagination(shouldScroll);
         }
 
-        // 답안 선택 시에는 shouldScroll을 false로 전달하여 스크롤 고정
         function selectOpt(qId, idx) { 
             userAnswers[qId] = idx; 
             renderQuiz(false); 
         }
 
-        // 페이지 이동 시에는 shouldScroll을 true로 전달하여 맨 위로 이동
         function changePage(dir) { 
             currentPage += dir; 
             renderQuiz(true); 
         }
         
-        // updatePagination 파라미터 추가: shouldScroll
         function updatePagination(shouldScroll) {
             const total = Math.ceil(currentQuestions.length / QUESTIONS_PER_PAGE);
             document.getElementById('page-info').innerText = `${currentPage + 1} / ${total}`;
@@ -295,7 +299,6 @@
             document.getElementById('next-btn').classList.toggle('hidden', isLast);
             document.getElementById('submit-btn').classList.toggle('hidden', !isLast);
             
-            // 페이지 이동 시에만 스크롤을 맨 위로 보냄
             if (shouldScroll) {
                 window.scrollTo({top: 0, behavior: 'smooth'});
             }
@@ -367,20 +370,17 @@
                     else if(!isCorrect && userAnswers[item.id] === i) style = "bg-rose-500 text-white border-rose-600 font-bold";
                     
                     const optImgHtml = item.optionImages[i] ? `<img src="${item.optionImages[i]}" class="opt-image opacity-80 mb-2">` : '';
-                    return `<div class="p-3 px-4 rounded-xl mb-1.5 border text-sm ${style}">
-                        ${i+1}. 
-                        ${optImgHtml}
-                        ${opt}
-                    </div>`;
+                    return `<div class="p-3 px-4 rounded-xl mb-1.5 border text-sm ${style}">${i+1}. ${optImgHtml}${opt}</div>`;
                 }).join('');
                 
+                // 줄바꿈 공백 제거하여 들여쓰기 수정
                 div.innerHTML = `
                     <h4 class="font-bold mb-4 text-slate-800">Q${item.id}. ${item.q}</h4>
                     ${reviewImgHtml}
                     <div>${opts}</div>
-                    <div class="mt-4 p-4 bg-slate-50 rounded-2xl text-xs text-slate-600 leading-relaxed whitespace-pre-wrap text-left">
-                        <div class="mb-1 font-black text-blue-600">해설:</div>
-                        <div class="block w-full">${item.explanation || "제공된 해설이 없습니다."}
+                    <div class="mt-4 p-4 bg-slate-50 rounded-2xl text-xs text-slate-600 leading-relaxed border-l-4 border-blue-500">
+                        <div class="mb-1 font-black text-blue-600 text-left">학습 해설:</div>
+                        <div class="explanation-content">${item.explanation || "제공된 해설이 없습니다."}</div>
                     </div>
                 `;
                 list.appendChild(div);
